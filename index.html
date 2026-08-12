@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <!-- スマホでの拡大縮小を防ぐ -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>東方風 スマホSTGデモ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+  
+  <!-- ★変更：キャンバスを中央配置するためのラッパー（箱）を追加 -->
+  <div id="canvasWrapper">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+  
+  <!-- 下部：操作ゾーン（ここはそのまま） -->
+  <div id="controlPad">
+    <canvas id="joyCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none;"></canvas>
+    <div id="slowButton">低速</div>
+    <p id="controlText">操作ゾーン</p>
+  </div>
+  
+</div>
+  <script src="main.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

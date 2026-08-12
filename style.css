@@ -1,0 +1,70 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  background-color: #000;
+  overflow: hidden; /* スクロール禁止 */
+  touch-action: none; /* デフォルトのタッチ操作を無効化 */
+}
+#game-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+#gameCanvas {
+  background-color: #222; /* ゲーム画面の背景色 */
+  aspect-ratio: 3 / 4;    /* 縦横比を 3:4 に完全固定 */
+  max-width: 100%;        /* ラッパーからはみ出さないようにする */
+  max-height: 100%;       /* ラッパーからはみ出さないようにする */
+  display: block;
+}
+#controlPad {
+  flex: 3; /* 画面の30%を占有 */
+  background-color: #444;
+  border-top: 2px solid #666;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #aaa;
+  font-family: sans-serif;
+  user-select: none;
+  position: relative; /* 子要素（ボタン）の絶対配置の基準にするため追加 */
+}
+
+/* 低速ボタンのスタイル */
+#slowButton {
+  position: absolute;
+  left: 10px;        /* 左端から少し離す */
+  top: 50%;
+  transform: translateY(-50%); /* 縦方向の中央に配置 */
+  width: 70px;
+  height: 70px;
+  background-color: rgba(255, 0, 0, 0.6); /* 半透明の赤色 */
+  color: white;
+  border-radius: 50%; /* 丸いボタンにする */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  user-select: none; /* テキスト選択を防止 */
+  z-index: 10;       /* タッチ判定のために一番上に持ってくる */
+}
+
+/* 押している時の視覚的な変化（任意） */
+#slowButton.active {
+  background-color: rgba(255, 0, 0, 1.0);
+  transform: translateY(-50%) scale(0.9); /* 少し凹むような演出 */
+}
+
+#canvasWrapper {
+  flex: 7;
+  display: flex;
+  justify-content: center; /* 左右の中央に配置 */
+  align-items: center;     /* 上下の中央に配置 */
+  background-color: #000;  /* 左右にできる余白（黒帯）の色 */
+  width: 100%;
+  overflow: hidden;
+}
