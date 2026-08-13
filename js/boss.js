@@ -1,4 +1,7 @@
 // js/boss.js
+
+import { Bullet } from './bullet.js'; //
+
 export class Boss {
   constructor(x, y, width, height, hp, image, canvasWidth) {
     this.x = x;
@@ -18,6 +21,8 @@ export class Boss {
     this.speed = 3;     // 移動速度
     this.moveTimer = 0; // 次の移動先を決めるまでのタイマー
     this.targetX = x;   // 次の移動先X座標
+    this.lastFired = 0;
+    this.fireInterval = 1000; // 1秒(1000ms)ごとに撃つ
   }
 
   update() {
@@ -80,5 +85,33 @@ export class Boss {
       this.hp = 0;
       this.isAlive = false;
     }
+
+  // ★追加：自機を狙って弾を撃つメソッド
+  fire(timestamp, playerX, playerY) {
+    const bullets = [];
+    
+    // ボスが定位置まで降りてきており、かつ前の発射から一定時間経っていれば
+    if (this.y >= this.targetY && timestamp - this.lastFired > this.fireInterval) {
+      // ボスの中心座標
+      const bx = this.x + this.width / 2;
+      const by = this.y + this.height / 2;
+      
+      // 自機への角度（ラジアン）を計算する超重要関数 atan2
+      const angle = Math.atan2(playerY - by, playerX - bx);
+      
+      const speed = 4; // 敵弾のスピード
+
+      // 自機狙いを中心に、少しずつ角度をずらして3発撃つ（3way弾）
+      for (let i = -1; i <= 1; i++) {
+        const a = angle + (i * 0.3); // 0.3ラジアン（約17度）ずらす
+        const vx = Math.cos(a) * speed;
+        const vy = Math.sin(a) * speed;
+        
+        // 幅・高さを20とし、画像はnull、isEnemyをtrueにする
+        bullets.push(new Bullet(bx - 10, by, vx, vy, 20, 20, null, true));
+      }
+      this.lastFired = timestamp;
+    }
+    return bullets;
   }
 }
