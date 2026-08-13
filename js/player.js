@@ -15,7 +15,13 @@ export class Player {
     
     this.lastFired = 0;
     this.fireInterval = 100;
+    this.hitboxRadius = 4; // 実際の当たり判定
+    
+    // ★追加：グレイズ（かすり）の設定
+    this.grazeRadius = 25; // グレイズ判定の広さ
+    this.graze = 0;        // かすった回数スコア
   }
+
 
   update(input, canvasWidth, canvasHeight) {
     // input(InputManager) から情報をもらって移動
@@ -55,10 +61,18 @@ export class Player {
       ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     }
     
-    // 当たり判定の描画
+    // 当たり判定・グレイズ判定の描画
     if (input.isSlowMode) {
       const cx = this.x + this.width / 2;
       const cy = this.y + this.height / 2;
+      
+      // ★追加：グレイズ判定を薄い青色で表示（開発中見やすいように）
+      ctx.beginPath();
+      ctx.arc(cx, cy, this.grazeRadius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(100, 200, 255, 0.2)';
+      ctx.fill();
+
+      // ヒットボックス（既存の赤い円）
       ctx.beginPath();
       ctx.arc(cx, cy, this.hitboxRadius, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
