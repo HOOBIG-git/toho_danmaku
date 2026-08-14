@@ -68,3 +68,58 @@ body {
   width: 100%;
   overflow: hidden;
 }
+
+/* オーバーレイのスタイル */
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  color: white;
+  font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
+  text-align: center;
+}
+
+#resultTitle {
+  font-size: 24px;
+  margin-bottom: 8px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+#resultSubtitle {
+  font-size: 14px;
+  color: #ccc;
+  margin-bottom: 25px;
+}
+
+#retryButton {
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #e52d27, #b31217);
+  border: 2px solid white;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(229, 45, 39, 0.4);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s, background 0.2s;
+}
+
+#retryButton:active {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, #b31217, #e52d27);
+}
+
+.hidden {
+  display: none !important;
+}

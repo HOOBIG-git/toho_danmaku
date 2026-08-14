@@ -3,7 +3,9 @@
 import { Bullet } from './bullet.js'; //
 
 export class Boss {
-  constructor(x, y, width, height, hp, image, canvasWidth) {
+  constructor(x, y, width, height, hp, image, canvasWidth, spellName = '古代の法則「古代の宇宙」', timeLimit = 60) {
+    this.startX = x;
+    this.startY = y;
     this.x = x;
     this.y = y;
     this.width = width;
@@ -15,6 +17,10 @@ export class Boss {
     
     this.isAlive = true;
     
+    // スペルカード設定
+    this.spellName = spellName;
+    this.timeLimit = timeLimit; // 制限時間（秒）
+    
     // ボスの移動用パラメータ
     this.canvasWidth = canvasWidth;
     this.targetY = 100; // ボスが定位置とする高さ
@@ -23,6 +29,17 @@ export class Boss {
     this.targetX = x;   // 次の移動先X座標
     this.lastFired = 0;
     this.fireInterval = 1000; // 1秒(1000ms)ごとに撃つ
+  }
+
+  // ボスの状態をリセットする（リトライ用）
+  reset() {
+    this.x = this.startX;
+    this.y = this.startY;
+    this.hp = this.maxHp;
+    this.isAlive = true;
+    this.moveTimer = 0;
+    this.targetX = this.startX;
+    this.lastFired = 0;
   }
 
   update() {

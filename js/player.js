@@ -3,6 +3,8 @@ import { Bullet } from './bullet.js';
 
 export class Player {
   constructor(x, y, image, bulletImage) {
+    this.startX = x;
+    this.startY = y;
     this.x = x;
     this.y = y;
     this.width = 60;
@@ -22,12 +24,23 @@ export class Player {
     this.graze = 0;        // かすった回数スコア
   }
 
+  reset() {
+    this.x = this.startX;
+    this.y = this.startY;
+    this.graze = 0;
+    this.lastFired = 0;
+  }
+
 
   update(input, canvasWidth, canvasHeight) {
-    // input(InputManager) から情報をもらって移動
-    const speed = input.isSlowMode ? this.slowSpeed : this.normalSpeed;
-    this.x += input.moveDirX * speed;
-    this.y += input.moveDirY * speed;
+    // ドラッグ移動量(delta)を取得し、低速モード時は感度を減衰
+    const sensitivity = input.isSlowMode ? 0.5 : 1.2;
+    this.x += input.deltaX * sensitivity;
+    this.y += input.deltaY * sensitivity;
+
+    // 消費したので入力をクリア
+    input.deltaX = 0;
+    input.deltaY = 0;
 
     // 画面外制限
     if (this.x < 0) this.x = 0;

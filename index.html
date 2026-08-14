@@ -11,8 +11,14 @@
   <div id="game-container">
   
   <!-- ★変更：キャンバスを中央配置するためのラッパー（箱）を追加 -->
-  <div id="canvasWrapper">
+  <div id="canvasWrapper" style="position: relative;">
     <canvas id="gameCanvas"></canvas>
+    <!-- オーバーレイUI（初期状態は非表示） -->
+    <div id="overlay" class="hidden">
+      <h2 id="resultTitle">SPELL CARD CAPTURED</h2>
+      <p id="resultSubtitle">古代の法則「古代の宇宙」</p>
+      <div id="retryButton">リトライ</div>
+    </div>
   </div>
   
   <!-- 下部：操作ゾーン（ここはそのまま） -->
@@ -23,7 +29,6 @@
   </div>
   
 </div>
-  <script src="main.js"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

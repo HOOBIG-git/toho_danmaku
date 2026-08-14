@@ -6,19 +6,22 @@ export class InputManager {
     this.joyCtx = joyCanvas.getContext('2d');
     
     this.isSlowMode = false;
-    this.moveDirX = 0;
-    this.moveDirY = 0;
     
-    // ジョイスティック内部状態
+    // 相対ドラッグ操作用ステート
     this.isJoyActive = false;
-    this.startX = 0;
+    this.startX = 0;       // ドラッグ開始位置（ローカル座標）
     this.startY = 0;
-    this.currentX = 0;
+    this.currentX = 0;     // 現在の位置（ローカル座標）
     this.currentY = 0;
-    this.maxRadius = 50;
+    this.prevX = 0;        // 前フレームのタッチX（スクリーン座標 clientX）
+    this.prevY = 0;        // 前フレームのタッチY（スクリーン座標 clientY）
+    this.deltaX = 0;       // フレームごとの相対移動量
+    this.deltaY = 0;
     
-    // ★追加：ジョイスティックを操作している「指のID」を記憶する
     this.joyTouchId = null; 
+
+    // キーボード操作用の状態管理 (PC開発・テスト用)
+    this.keys = {};
 
     this._initEvents();
   }
@@ -31,7 +34,7 @@ export class InputManager {
       if (e) {
         if (e.type !== 'keydown' && e.type !== 'keyup') {
           e.preventDefault(); 
-          e.stopPropagation(); // ★重要：ボタンへのタッチがジョイスティック側に誤爆するのを防ぐ
+          e.stopPropagation(); // ボタンへのタッチがドラッグ操作に誤爆するのを防ぐ
         }
       }
       this.isSlowMode = val;
@@ -42,16 +45,27 @@ export class InputManager {
     slowBtn.addEventListener('mousedown', (e) => setSlow(e, true));
     slowBtn.addEventListener('mouseup', (e) => setSlow(e, false));
     slowBtn.addEventListener('mouseleave', (e) => setSlow(e, false));
-    // ★追加：スマホ用のタッチイベント
+    
+    // スマホ用のタッチイベント
     slowBtn.addEventListener('touchstart', (e) => setSlow(e, true), { passive: false });
     slowBtn.addEventListener('touchend', (e) => setSlow(e, false));
     slowBtn.addEventListener('touchcancel', (e) => setSlow(e, false));
 
-    // PC用のキーボードイベント
-    window.addEventListener('keydown', (e) => { if (e.key === 'Shift') setSlow(e, true); });
-    window.addEventListener('keyup', (e) => { if (e.key === 'Shift') setSlow(e, false); });
+    // PC用のキーボードイベント (Shiftキーでの低速切替)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Shift') {
+        setSlow(e, true);
+      }
+      this.keys[e.code] = true;
+    });
+    window.addEventListener('keyup', (e) => {
+      if (e.key === 'Shift') {
+        setSlow(e, false);
+      }
+      this.keys[e.code] = false;
+    });
 
-    // --- ジョイスティックの処理（マルチタッチ対応） ---
+    // --- 相対ドラッグ処理 ---
     const setJoyStart = (e) => {
       if (e.type !== 'mousedown') e.preventDefault();
       if (this.isJoyActive) return; // すでに操作中なら無視
@@ -59,7 +73,7 @@ export class InputManager {
       let point;
       if (e.type === 'touchstart') {
         point = e.changedTouches[0];
-        this.joyTouchId = point.identifier; // ★操作を始めた指のIDを記憶
+        this.joyTouchId = point.identifier; // 操作を始めた指のIDを記憶
       } else {
         point = e;
         this.joyTouchId = 'mouse';
@@ -67,11 +81,19 @@ export class InputManager {
 
       this.isJoyActive = true;
       const rect = this.controlPad.getBoundingClientRect();
+      
+      // 開始ローカル座標を記録
       this.startX = point.clientX - rect.left;
       this.startY = point.clientY - rect.top;
       this.currentX = this.startX;
       this.currentY = this.startY;
-      this._calcDir();
+      
+      // 相対移動計算用の基準点（スクリーン座標）
+      this.prevX = point.clientX;
+      this.prevY = point.clientY;
+      
+      this.deltaX = 0;
+      this.deltaY = 0;
     };
 
     const setJoyMove = (e) => {
@@ -80,14 +102,14 @@ export class InputManager {
 
       let point;
       if (e.type === 'touchmove') {
-        // ★動いた指の中に、ジョイスティックを操作中の指(joyTouchId)があるか探す
+        // 操作中の指を探す
         for (let i = 0; i < e.changedTouches.length; i++) {
           if (e.changedTouches[i].identifier === this.joyTouchId) {
             point = e.changedTouches[i];
             break;
           }
         }
-        if (!point) return; // 別の指（低速ボタンなど）が動いただけなら無視する
+        if (!point) return;
       } else {
         point = e;
       }
@@ -95,13 +117,19 @@ export class InputManager {
       const rect = this.controlPad.getBoundingClientRect();
       this.currentX = point.clientX - rect.left;
       this.currentY = point.clientY - rect.top;
-      this._calcDir();
+
+      // 前フレームからの移動量を計算して累積
+      this.deltaX += point.clientX - this.prevX;
+      this.deltaY += point.clientY - this.prevY;
+
+      // 基準点を更新
+      this.prevX = point.clientX;
+      this.prevY = point.clientY;
     };
 
     const setJoyEnd = (e) => {
       if (!this.isJoyActive) return;
 
-      // ★離れた指が、ジョイスティックを操作中の指だった場合のみリセットする
       if (e && (e.type === 'touchend' || e.type === 'touchcancel')) {
         let isJoyFingerLifted = false;
         for (let i = 0; i < e.changedTouches.length; i++) {
@@ -115,8 +143,8 @@ export class InputManager {
 
       this.isJoyActive = false;
       this.joyTouchId = null;
-      this.moveDirX = 0;
-      this.moveDirY = 0;
+      this.deltaX = 0;
+      this.deltaY = 0;
     };
 
     // イベントリスナーの登録（ウィンドウ全体へのタッチ移動も監視する）
@@ -130,40 +158,60 @@ export class InputManager {
     window.addEventListener('touchcancel', setJoyEnd);
   }
 
-  // --- 入力角度の計算（変更なし） ---
-  _calcDir() {
-    const dx = this.currentX - this.startX;
-    const dy = this.currentY - this.startY;
-    const dist = Math.hypot(dx, dy);
-    if (dist < 15) {
-      this.moveDirX = 0; this.moveDirY = 0; return;
+  // --- PCキーボード移動の処理（毎フレームゲームループで更新） ---
+  update() {
+    let kx = 0;
+    let ky = 0;
+    if (this.keys['ArrowLeft'] || this.keys['KeyA']) kx = -1;
+    if (this.keys['ArrowRight'] || this.keys['KeyD']) kx = 1;
+    if (this.keys['ArrowUp'] || this.keys['KeyW']) ky = -1;
+    if (this.keys['ArrowDown'] || this.keys['KeyS']) ky = 1;
+
+    if (kx !== 0 && ky !== 0) {
+      // 斜め移動の正規化
+      const len = Math.hypot(kx, ky);
+      kx /= len;
+      ky /= len;
     }
-    const angle = Math.atan2(dy, dx);
-    let deg = angle * (180 / Math.PI);
-    if (deg < 0) deg += 360;
-    const snapDeg = Math.round(deg / 45) * 45;
-    const snapRad = snapDeg * (Math.PI / 180);
-    this.moveDirX = Math.cos(snapRad);
-    this.moveDirY = Math.sin(snapRad);
+
+    // キーボードの基準速度（1フレームの移動ピクセル数）
+    const baseSpeed = this.isSlowMode ? 2 : 5;
+    const sensitivity = this.isSlowMode ? 0.5 : 1.2;
+
+    if (kx !== 0) {
+      this.deltaX = (kx * baseSpeed) / sensitivity;
+    }
+    if (ky !== 0) {
+      this.deltaY = (ky * baseSpeed) / sensitivity;
+    }
   }
 
-  // --- ジョイスティックの描画（変更なし） ---
+  // --- 相対ドラッグ操作の可視化 ---
   draw() {
     this.joyCtx.clearRect(0, 0, this.joyCanvas.width, this.joyCanvas.height);
     if (this.isJoyActive) {
+      // 1. ドラッグ開始地点（基準点）を描画
       this.joyCtx.beginPath();
-      this.joyCtx.arc(this.startX, this.startY, this.maxRadius, 0, Math.PI * 2);
-      this.joyCtx.fillStyle = 'rgba(255,255,255,0.1)';
+      this.joyCtx.arc(this.startX, this.startY, 35, 0, Math.PI * 2);
+      this.joyCtx.fillStyle = 'rgba(255,255,255,0.08)';
       this.joyCtx.fill();
-      this.joyCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+      this.joyCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+      this.joyCtx.lineWidth = 1.5;
       this.joyCtx.stroke();
       
-      const drawX = this.startX + this.moveDirX * this.maxRadius;
-      const drawY = this.startY + this.moveDirY * this.maxRadius;
+      // 2. 指の現在位置を描画
       this.joyCtx.beginPath();
-      this.joyCtx.arc(drawX, drawY, 20, 0, Math.PI * 2);
-      this.joyCtx.fillStyle = 'rgba(255,255,255,0.5)';
+      this.joyCtx.arc(this.currentX, this.currentY, 15, 0, Math.PI * 2);
+      this.joyCtx.fillStyle = 'rgba(255,255,255,0.4)';
       this.joyCtx.fill();
+      
+      // 3. 基準点と現在位置を繋ぐ細いガイドラインを描画
+      this.joyCtx.beginPath();
+      this.joyCtx.moveTo(this.startX, this.startY);
+      this.joyCtx.lineTo(this.currentX, this.currentY);
+      this.joyCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+      this.joyCtx.lineWidth = 1;
+      this.joyCtx.stroke();
     }
   }
 }
