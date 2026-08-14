@@ -38,7 +38,7 @@ let boss = new Boss(
   100, 
   bossImg, 
   canvas.width, 
-  '爆符「ペタフレア」', 
+  'デモ「スペカ名」', 
   60
 );
 
@@ -55,6 +55,15 @@ let playerScore = 0;
 let spellBonus = 10000000; // 初期ボーナス: 1千万点
 let flashTimer = 0;        // 被弾フラッシュ用のタイマー
 let cautionTimer = 150;    // お空の核警報（☢ CAUTION ☢）用タイマー（150フレーム=約2.5秒）
+
+// スクリーンシェイク（画面揺れ）用ステート
+let shakeTimer = 0;
+let shakeIntensity = 0;
+
+function triggerShake(duration, intensity) {
+  shakeTimer = duration;
+  shakeIntensity = intensity;
+}
 
 // HTMLオーバーレイ要素の取得
 const overlay = document.getElementById('overlay');
@@ -82,6 +91,8 @@ function resetGame() {
   playerScore = 0;
   flashTimer = 0;
   cautionTimer = 150; // リトライ時にCAUTION表示を再度出す
+  shakeTimer = 0;
+  shakeIntensity = 0;
   lastTime = 0;
   
   player.reset();
@@ -113,6 +124,17 @@ function checkCollision(rect1, rect2) {
 function gameLoop(timestamp) {
   // PCキーボード入力等の更新
   input.update();
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // ★追加：スクリーンシェイク（画面揺れ）処理
+  ctx.save();
+  if (shakeTimer > 0) {
+    const dx = (Math.random() - 0.5) * shakeIntensity;
+    const dy = (Math.random() - 0.5) * shakeIntensity;
+    ctx.translate(dx, dy);
+    shakeTimer--;
+  }
 
   // --- 1. 11面(地霊殿)核融合炉の燃え盛るプロシージャル背景 ---
   const grad = ctx.createRadialGradient(
@@ -148,7 +170,23 @@ function gameLoop(timestamp) {
       // ボスから自機の中心座標へ向けて弾を撃たせる
       const px = player.x + player.width / 2;
       const py = player.y + player.height / 2;
+      
+      // 弾幕の配列サイズを射出前と後で比較して、新規に巨大太陽弾が撃たれたか検知
+      const oldLen = enemyBullets.length;
       enemyBullets.push(...boss.fire(timestamp, px, py));
+      const newLen = enemyBullets.length;
+      
+      // 新しい太陽弾が撃ち出されたらズシーンと画面を揺らす！
+      let hasSolarShot = false;
+      for (let idx = oldLen; idx < newLen; idx++) {
+        if (enemyBullets[idx] && enemyBullets[idx].isSolar) {
+          hasSolarShot = true;
+          break;
+        }
+      }
+      if (hasSolarShot) {
+        triggerShake(10, 4.5); // 太陽射出時の重低音振動エフェクト
+      }
     }
 
     // タイマー更新
@@ -208,7 +246,7 @@ function gameLoop(timestamp) {
       }
     }
 
-    // 4. 敵弾의 移動と自機への【被弾・グレイズ判定】
+    // 4. 敵弾の移動と自機への【被弾・グレイズ判定】
     const px = player.x + player.width / 2;
     const py = player.y + player.height / 2;
 
@@ -237,6 +275,7 @@ function gameLoop(timestamp) {
         gameState = 'FAILED';
         spellBonus = 0;
         flashTimer = 15; // 被弾フラッシュを起動 (15フレーム)
+        triggerShake(24, 14); // 被弾時の激しい画面シェイク！
         showOverlay('SPELL CARD FAILED', 'Hit by bullet', '#ff5555');
         enemyBullets.splice(i, 1);
         continue;
@@ -253,6 +292,11 @@ function gameLoop(timestamp) {
         enemyBullets.splice(i, 1);
       }
     }
+
+    // ★追加：CAUTIONタイマーの各節目で画面振動を発生させる (3段アラームの原作演出再現)
+    if (cautionTimer === 135) triggerShake(15, 6.0); // 1回目のアラーム振動
+    if (cautionTimer === 85) triggerShake(15, 6.0);  // 2回目のアラーム振動
+    if (cautionTimer === 35) triggerShake(25, 9.0);  // 3回目の弾幕発射開始の本震
   } else {
     // FAILED または CAPTURED 時は delta time 計算用の基準時刻をリセット
     lastTime = 0;
@@ -404,7 +448,7 @@ function gameLoop(timestamp) {
 
   ctx.restore();
 
-  // --- プレイ画面の飾り枠（原作のアーケード筐体風、ゴールド×深紅の二重枠） ---
+  // --- プレイ画面の飾り枠（原作のアーケード筐体風、ゴールド×深紅 of 二重枠） ---
   ctx.save();
   ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)'; // ゴールドの細い外枠
   ctx.lineWidth = 3;
@@ -413,6 +457,9 @@ function gameLoop(timestamp) {
   ctx.strokeStyle = 'rgba(139, 0, 0, 0.55)'; // 深紅のさらに細い内枠
   ctx.lineWidth = 1.5;
   ctx.strokeRect(9, 9, canvas.width - 18, canvas.height - 18);
+  ctx.restore();
+
+  // ★追加：シェイク状態から復帰させるためのリストア
   ctx.restore();
 
   requestAnimationFrame(gameLoop);

@@ -19,24 +19,30 @@ export class Bullet {
     this.x += this.vx;
     this.y += this.vy;
 
-    // ★追加：太陽弾（核熱弾）の場合、移動に伴い徐々に収縮・凝縮する挙動
-    if (this.isSolar && this.width > 50) {
-      const shrinkAmount = 1.0; // 1フレームあたりの縮小幅
-      this.width -= shrinkAmount;
-      this.height -= shrinkAmount;
-      
-      // 縮小時に弾の中心（重心）がズレないように左上座標を補正
-      this.x += shrinkAmount / 2;
-      this.y += shrinkAmount / 2;
+    // ★原作再現：太陽弾（核熱弾）は画面下部（Y座標が65%以降）に達すると、急激に収縮・凝縮する（ハッタリ仕様）
+    if (this.isSolar) {
+      const triggerY = 640 * 0.65; // 画面高の65%付近に引きつけると
+      if (this.y >= triggerY && this.width > 45) {
+        const shrinkAmount = 4.2; // 急速にシュリンクして隙間を空ける
+        this.width -= shrinkAmount;
+        this.height -= shrinkAmount;
+        
+        // 縮小時に中心座標がズレないように補正
+        this.x += shrinkAmount / 2;
+        this.y += shrinkAmount / 2;
+      }
     }
   }
 
   draw(ctx) {
     if (this.isEnemy) {
       if (this.isSolar) {
-        // ★追加：巨大太陽弾（核熱弾）のプロシージャル脈動描画
-        const cx = this.x + this.width / 2;
-        const cy = this.y + this.height / 2;
+        // ★原作再現：不安定な核熱エネルギーを表現するため、中心座標を常に小刻みに振動（wobble）させる
+        const wobbleX = (Math.random() - 0.5) * 4.5;
+        const wobbleY = (Math.random() - 0.5) * 4.5;
+        
+        const cx = this.x + this.width / 2 + wobbleX;
+        const cy = this.y + this.height / 2 + wobbleY;
         const r = this.width / 2;
         
         ctx.save();
