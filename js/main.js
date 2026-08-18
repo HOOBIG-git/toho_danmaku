@@ -4,6 +4,7 @@ import { InputManager } from './input.js';
 import { Player } from './player.js';
 import { Boss } from './boss.js';
 import { Item } from './item.js';
+import { Bullet } from './bullet.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -29,6 +30,7 @@ resizeCanvas();
 
 // --- 画像の読み込み ---
 const playerImg = new Image(); playerImg.src = 'assets/player.png';
+const playerBulletImg = new Image(); playerBulletImg.src = 'assets/playerbullet.png';
 const bulletImg = new Image(); bulletImg.src = 'assets/bullet.png';
 const okuuImg = new Image(); okuuImg.src = 'assets/enemy.png';
 const kisumeImg = new Image(); kisumeImg.src = 'assets/kisume.png';
@@ -36,7 +38,7 @@ const kisumeImg = new Image(); kisumeImg.src = 'assets/kisume.png';
 // --- インスタンスの生成 ---
 const input = new InputManager(controlPad, joyCanvas);
 // プレイヤーはプレイ領域の中心下部に生成
-const player = new Player(PLAY_WIDTH / 2, PLAY_HEIGHT * 0.8, playerImg, bulletImg);
+const player = new Player(PLAY_WIDTH / 2, PLAY_HEIGHT * 0.8, playerImg, playerBulletImg);
 
 // ボスの生成 (初期ボス: Okuu, HP: 100, スペル名: 爆符「ペタフレア」, 制限時間: 60秒)
 let boss = new Boss(
