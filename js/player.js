@@ -22,6 +22,14 @@ export class Player {
     // ★追加：グレイズ（かすり）の設定
     this.grazeRadius = 25; // グレイズ判定の広さ
     this.graze = 0;        // かすった回数スコア
+
+    // 動的システム (スペル練習のため残機とボムは0固定、パワーは表示用4.00固定)
+    this.lives = 0;
+    this.bombs = 0;
+    this.power = 4.00;
+    this.maxPower = 4.00;
+    this.invincibleTimer = 0;
+    this.bombTimer = 0;
   }
 
   reset() {
@@ -29,10 +37,22 @@ export class Player {
     this.y = this.startY;
     this.graze = 0;
     this.lastFired = 0;
+    this.lives = 0;
+    this.bombs = 0;
+    this.power = 4.00;
+    this.invincibleTimer = 0;
+    this.bombTimer = 0;
   }
 
+  isInvincible() {
+    return this.invincibleTimer > 0 || this.bombTimer > 0;
+  }
 
   update(input, canvasWidth, canvasHeight) {
+    // 無敵タイマーの更新
+    if (this.invincibleTimer > 0) this.invincibleTimer--;
+    if (this.bombTimer > 0) this.bombTimer--;
+
     // ドラッグ移動量(delta)を取得し、低速モード時は感度を減衰
     const sensitivity = input.isSlowMode ? 0.5 : 1.2;
     this.x += input.deltaX * sensitivity;
@@ -57,9 +77,11 @@ export class Player {
       const bSpd = 15;
 
       if (input.isSlowMode) {
+        // 標準低速：2-way直線ショット
         newBullets.push(new Bullet(bX - 8, bY, 0, -bSpd, 16, 32, this.bulletImage));
         newBullets.push(new Bullet(bX + 8, bY, 0, -bSpd, 16, 32, this.bulletImage));
       } else {
+        // 標準高速：3-way拡散ショット
         newBullets.push(new Bullet(bX, bY, 0, -bSpd, 16, 32, this.bulletImage));
         newBullets.push(new Bullet(bX - 10, bY + 5, -3, -bSpd * 0.95, 16, 32, this.bulletImage));
         newBullets.push(new Bullet(bX + 10, bY + 5, 3, -bSpd * 0.95, 16, 32, this.bulletImage));
@@ -71,7 +93,19 @@ export class Player {
 
   draw(ctx, input) {
     if (this.image.complete) {
-      ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+      if (this.isInvincible()) {
+        // 無敵時間中はチカチカ点滅させる
+        if (Math.floor(Date.now() / 50) % 2 === 0) {
+          ctx.save();
+          ctx.globalAlpha = 0.3;
+          ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+          ctx.restore();
+        } else {
+          ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        }
+      } else {
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+      }
     }
     
     // 当たり判定・グレイズ判定の描画

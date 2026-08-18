@@ -59,6 +59,31 @@ body {
   transform: translateY(-50%) scale(0.9); /* 少し凹むような演出 */
 }
 
+/* ボムボタンのスタイル */
+#bombButton {
+  position: absolute;
+  right: 10px;        /* 右端から少し離す */
+  top: 50%;
+  transform: translateY(-50%); /* 縦方向の中央に配置 */
+  width: 70px;
+  height: 70px;
+  background-color: rgba(0, 180, 0, 0.6); /* 半透明の緑色 */
+  color: white;
+  border-radius: 50%; /* 丸いボタンにする */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  user-select: none; /* テキスト選択を防止 */
+  z-index: 10;       /* タッチ判定のために一番上に持ってくる */
+}
+
+/* 押している時の視覚的な変化 */
+#bombButton.active {
+  background-color: rgba(0, 180, 0, 1.0);
+  transform: translateY(-50%) scale(0.9); /* 少し凹むような演出 */
+}
+
 #canvasWrapper {
   flex: 7;
   display: flex;
@@ -122,4 +147,79 @@ body {
 
 .hidden {
   display: none !important;
+}
+
+/* タイトル画面のスタイル */
+#titleScreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #250204 0%, #050001 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 150; /* オーバーレイより手前に配置 */
+  color: white;
+  font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
+}
+
+#titleText {
+  font-family: 'Georgia', 'Hiragino Mincho ProN', 'MS Mincho', serif;
+  font-size: 26px;
+  font-weight: bold;
+  color: #e5b22d; /* 美しいゴールド */
+  text-shadow: 0 0 15px rgba(229, 178, 45, 0.5);
+  text-align: center;
+  line-height: 1.4;
+  margin-bottom: 5px;
+  letter-spacing: 2px;
+}
+
+#titleDesc {
+  font-size: 11px;
+  color: #aaa;
+  margin-bottom: 35px;
+  letter-spacing: 1px;
+  text-align: center;
+  font-family: 'Georgia', sans-serif;
+}
+
+.boss-select-btn {
+  width: 260px;
+  padding: 14px 20px;
+  margin-bottom: 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.boss-select-btn:active {
+  background-color: rgba(139, 0, 0, 0.65); /* 深紅 */
+  border-color: #e5b22d; /* ゴールド */
+  transform: scale(0.97);
+  box-shadow: 0 0 12px rgba(229, 178, 45, 0.45);
+}
+
+.spell-prefix {
+  font-size: 11px;
+  font-style: italic;
+  color: #e5b22d; /* ゴールド */
+  margin-bottom: 4px;
+  font-family: 'Georgia', serif;
+}
+
+.boss-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffffff;
+  font-family: 'Hiragino Kaku Gothic Pro', sans-serif;
+  letter-spacing: 1px;
 }

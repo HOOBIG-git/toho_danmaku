@@ -6,6 +6,7 @@ export class InputManager {
     this.joyCtx = joyCanvas.getContext('2d');
     
     this.isSlowMode = false;
+    this.isBombRequested = false;
     
     // 相対ドラッグ操作用ステート
     this.isJoyActive = false;
@@ -56,6 +57,9 @@ export class InputManager {
       if (e.key === 'Shift') {
         setSlow(e, true);
       }
+      if (e.code === 'KeyX') {
+        triggerBomb(e);
+      }
       this.keys[e.code] = true;
     });
     window.addEventListener('keyup', (e) => {
@@ -64,6 +68,23 @@ export class InputManager {
       }
       this.keys[e.code] = false;
     });
+
+    // --- ボムボタンの処理 ---
+    const bombBtn = document.getElementById('bombButton');
+    const triggerBomb = (e) => {
+      if (e) {
+        if (e.type !== 'keydown') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+      this.isBombRequested = true;
+      bombBtn.classList.add('active');
+      setTimeout(() => bombBtn.classList.remove('active'), 150);
+    };
+
+    bombBtn.addEventListener('mousedown', triggerBomb);
+    bombBtn.addEventListener('touchstart', triggerBomb, { passive: false });
 
     // --- 相対ドラッグ処理 ---
     const setJoyStart = (e) => {

@@ -1,6 +1,6 @@
 // js/bullet.js (丸ごと上書き)
 export class Bullet {
-  constructor(x, y, vx, vy, width, height, image, isEnemy = false, isSolar = false) {
+  constructor(x, y, vx, vy, width, height, image, isEnemy = false, isSolar = false, isBucket = false) {
     this.x = x;
     this.y = y;
     this.vx = vx;
@@ -11,8 +11,9 @@ export class Bullet {
     this.isAlive = true;
     
     this.isEnemy = isEnemy;
-    this.isSolar = isSolar;   // ★追加：爆符「ペタフレア」用太陽弾フラグ
-    this.isGrazed = false; // ★追加：この弾ですでにグレイズしたか
+    this.isSolar = isSolar;     // ★追加：爆符「ペタフレア」用太陽弾フラグ
+    this.isBucket = isBucket;   // ★追加：怪奇「釣瓶落としの怪」用バケツ弾フラグ
+    this.isGrazed = false;     // ★追加：この弾ですでにグレイズしたか
   }
 
   update() {
@@ -59,6 +60,28 @@ export class Bullet {
         ctx.fillStyle = grad;
         ctx.fill();
         ctx.restore();
+      } else if (this.isBucket) {
+        // ★追加：キスメの釣瓶バケツ弾（エメラルドグリーンの発光エフェクト）
+        const cx = this.x + this.width / 2;
+        const cy = this.y + this.height / 2;
+        const r = this.width / 2;
+        
+        ctx.save();
+        const grad = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r * 1.1);
+        grad.addColorStop(0, '#ffffff');      // 白熱コア
+        grad.addColorStop(0.35, '#a4f395');   // 淡い緑の輝き
+        grad.addColorStop(0.8, '#1b8633');    // 釣瓶の深いエメラルド
+        grad.addColorStop(1, 'rgba(27, 134, 51, 0)');
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+        ctx.restore();
       } else {
         // ★追加：随伴する青い粒弾の美的な描画（赤オレンジとの対比）
         const radius = this.width / 2;
@@ -82,8 +105,8 @@ export class Bullet {
   }
 
   isOutOfBounds(canvasWidth, canvasHeight) {
-    // 太陽弾は大きいため、画面外判定を少し広めにとる
-    const margin = this.isSolar ? this.width : 0;
+    // 太陽弾やバケツ弾は大きいため、画面外判定を少し広めにとる
+    const margin = (this.isSolar || this.isBucket) ? this.width : 0;
     return (this.y + this.height + margin < 0 || this.y - margin > canvasHeight || this.x + this.width + margin < 0 || this.x - margin > canvasWidth);
   }
 }

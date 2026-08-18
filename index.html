@@ -17,7 +17,23 @@
     <div id="overlay" class="hidden">
       <h2 id="resultTitle">SPELL CARD CAPTURED</h2>
       <p id="resultSubtitle"></p>
-      <div id="retryButton">リトライ</div>スペカ名をここに挿入
+      <div id="retryButton">リトライ</div>
+    </div>
+    
+    <!-- タイトル画面オーバーレイ（初期状態は表示） -->
+    <div id="titleScreen">
+      <h1 id="titleText">東方風スマホSTG<br><span style="font-size: 14px; letter-spacing: 2px; font-weight: normal; color: #ccc;">- スペルプラクティス -</span></h1>
+      <p id="titleDesc">挑戦するスペルカードを選択してください</p>
+      
+      <div class="boss-select-btn" data-boss="okuu">
+        <div class="spell-prefix">爆符「ペタフレア」</div>
+        <div class="boss-name">vs 霊烏路 空</div>
+      </div>
+      
+      <div class="boss-select-btn" data-boss="kisume">
+        <div class="spell-prefix">怪奇「釣瓶落としの怪」</div>
+        <div class="boss-name">vs キスメ</div>
+      </div>
     </div>
   </div>
   
@@ -25,6 +41,7 @@
   <div id="controlPad">
     <canvas id="joyCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none;"></canvas>
     <div id="slowButton">低速</div>
+    <div id="bombButton">ボム</div>
     <p id="controlText">操作ゾーン</p>
   </div>
   
