@@ -2,7 +2,7 @@
 import { Bullet } from './bullet.js';
 
 export class Player {
-  constructor(x, y, image, bulletImage) {
+  constructor(x, y, image, imageL, imageR, bulletImage) {
     this.startX = x;
     this.startY = y;
     this.x = x;
@@ -13,6 +13,9 @@ export class Player {
     this.slowSpeed = 2;
     this.hitboxRadius = 4;
     this.image = image;
+    this.imageL = imageL;     // ★追加：左移動スプライト
+    this.imageR = imageR;     // ★追加：右移動スプライト
+    this.currentImage = image; // ★追加：現在のスプライト
     this.bulletImage = bulletImage;
     
     this.lastFired = 0;
@@ -42,6 +45,7 @@ export class Player {
     this.power = 4.00;
     this.invincibleTimer = 0;
     this.bombTimer = 0;
+    this.currentImage = this.image; // 通常スプライトに戻す
   }
 
   isInvincible() {
@@ -57,6 +61,15 @@ export class Player {
     const sensitivity = input.isSlowMode ? 0.5 : 1.2;
     this.x += input.deltaX * sensitivity;
     this.y += input.deltaY * sensitivity;
+
+    // ★追加：移動方向に応じたスプライト画像の切り替え (左移動ならL、右移動ならR、静止・上下なら正面)
+    if (input.deltaX < -0.1) {
+      this.currentImage = this.imageL;
+    } else if (input.deltaX > 0.1) {
+      this.currentImage = this.imageR;
+    } else {
+      this.currentImage = this.image;
+    }
 
     // 消費したので入力をクリア
     input.deltaX = 0;
@@ -92,19 +105,19 @@ export class Player {
   }
 
   draw(ctx, input) {
-    if (this.image.complete) {
+    if (this.currentImage && this.currentImage.complete) {
       if (this.isInvincible()) {
         // 無敵時間中はチカチカ点滅させる
         if (Math.floor(Date.now() / 50) % 2 === 0) {
           ctx.save();
           ctx.globalAlpha = 0.3;
-          ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+          ctx.drawImage(this.currentImage, this.x, this.y, this.width, this.height);
           ctx.restore();
         } else {
-          ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+          ctx.drawImage(this.currentImage, this.x, this.y, this.width, this.height);
         }
       } else {
-        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        ctx.drawImage(this.currentImage, this.x, this.y, this.width, this.height);
       }
     }
     

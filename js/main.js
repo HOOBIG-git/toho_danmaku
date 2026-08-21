@@ -3,7 +3,7 @@
 import { InputManager } from './input.js';
 import { Player } from './player.js';
 import { Boss } from './boss.js';
-import { Item } from './item.js';
+// import { Item } from './item.js';
 import { Bullet } from './bullet.js';
 
 const canvas = document.getElementById('gameCanvas');
@@ -30,6 +30,8 @@ resizeCanvas();
 
 // --- 画像の読み込み ---
 const playerImg = new Image(); playerImg.src = 'assets/player.png';
+const playerLImg = new Image(); playerLImg.src = 'assets/playerL.png';
+const playerRImg = new Image(); playerRImg.src = 'assets/playerR.png';
 const playerBulletImg = new Image(); playerBulletImg.src = 'assets/playerbullet.png';
 const bulletImg = new Image(); bulletImg.src = 'assets/bullet.png';
 const okuuImg = new Image(); okuuImg.src = 'assets/enemy.png';
@@ -38,7 +40,7 @@ const kisumeImg = new Image(); kisumeImg.src = 'assets/kisume.png';
 // --- インスタンスの生成 ---
 const input = new InputManager(controlPad, joyCanvas);
 // プレイヤーはプレイ領域の中心下部に生成
-const player = new Player(PLAY_WIDTH / 2, PLAY_HEIGHT * 0.8, playerImg, playerBulletImg);
+const player = new Player(PLAY_WIDTH / 2, PLAY_HEIGHT * 0.8, playerImg, playerLImg, playerRImg, playerBulletImg);
 
 // ボスの生成 (初期ボス: Okuu, HP: 100, スペル名: 爆符「ペタフレア」, 制限時間: 60秒)
 let boss = new Boss(
@@ -82,6 +84,7 @@ const overlay = document.getElementById('overlay');
 const resultTitle = document.getElementById('resultTitle');
 const resultSubtitle = document.getElementById('resultSubtitle');
 const retryButton = document.getElementById('retryButton');
+const titleButton = document.getElementById('titleButton');
 
 // ボス選択ボタンのイベント割り当て
 document.querySelectorAll('.boss-select-btn').forEach(btn => {
@@ -156,6 +159,19 @@ retryButton.addEventListener('click', resetGame);
 retryButton.addEventListener('touchstart', (e) => {
   e.preventDefault();
   resetGame();
+});
+
+// タイトルへ戻るボタンにイベントを紐付け
+const returnToTitle = () => {
+  hideOverlay();
+  titleScreen.classList.remove('hidden');
+  gameState = 'TITLE';
+};
+
+titleButton.addEventListener('click', returnToTitle);
+titleButton.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  returnToTitle();
 });
 
 function checkCollision(rect1, rect2) {
@@ -265,7 +281,7 @@ function gameLoop(timestamp) {
       
       // 弾幕の配列サイズを射出前と後で比較して、新規に巨大太陽弾が撃たれたか検知
       const oldLen = enemyBullets.length;
-      enemyBullets.push(...boss.fire(timestamp, px, py));
+      enemyBullets.push(...boss.fire(timestamp, px, py, spellTimer));
       const newLen = enemyBullets.length;
       
       // 新しい太陽弾が撃ち出されたらズシーンと画面を揺らす！
@@ -319,11 +335,13 @@ function gameLoop(timestamp) {
         playerScore += 100; // ダメージ毎に100点加算
         hit = true;
         
-        // 被弾時に低確率（5%）でパワーアイテムまたは点アイテムをドロップ
+        // 被弾時のパワーアイテムまたは点アイテムドロップは一時コメントアウト中
+        /*
         if (Math.random() < 0.05) {
           const type = Math.random() < 0.75 ? 'POWER' : 'POINT';
           items.push(new Item(boss.x + boss.width / 2 + (Math.random() - 0.5) * 40, boss.y + boss.height / 2, type));
         }
+        */
         
         // スペルカード取得判定
         if (!boss.isAlive) {
@@ -424,7 +442,8 @@ function gameLoop(timestamp) {
       }
     }
 
-    // 5. アイテムの移動とプレイヤーによる回収判定
+    // 5. アイテムの移動とプレイヤーによる回収判定 (今回は実装しないためコメントアウト)
+    /*
     for (let i = items.length - 1; i >= 0; i--) {
       let item = items[i];
       item.update(player);
@@ -452,6 +471,7 @@ function gameLoop(timestamp) {
         continue;
       }
     }
+    */
 
     // ★追加：お空戦の場合のみCAUTIONタイマーの各節目で画面振動を発生させる (3段アラームの原作演出再現)
     if (boss.bossType === 'okuu') {
@@ -485,10 +505,12 @@ function gameLoop(timestamp) {
     boss.draw(ctx);
   }
 
-  // ★追加：アイテムの描画
+  // ★追加：アイテムの描画 (今回は実装しないためコメントアウト)
+  /*
   for (let item of items) {
     item.draw(ctx);
   }
+  */
 
   // ★追加：ボム（スペル）エフェクトの描画 (ボム0のため通常は走らないが念のため維持)
   if (player.bombTimer > 0) {

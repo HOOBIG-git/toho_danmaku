@@ -145,6 +145,26 @@ body {
   background: linear-gradient(135deg, #b31217, #e52d27);
 }
 
+#titleButton {
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #4a5568, #2d3748); /* 鋼鉄風ダークブルー */
+  border: 2px solid white;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(74, 85, 104, 0.4);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s, background 0.2s;
+  margin-top: 12px; /* リトライボタンの下に隙間をあける */
+}
+
+#titleButton:active {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, #2d3748, #4a5568);
+}
+
 .hidden {
   display: none !important;
 }

@@ -11,20 +11,25 @@ export class Boss {
     this.width = width;
     this.height = height;
     
-    this.maxHp = hp;
-    this.hp = hp;
     this.image = image;
     this.bossType = bossType; // 'okuu' (お空) または 'kisume' (キスメ)
     this.canvasWidth = canvasWidth;
     
     this.isAlive = true;
     
-    // スペルカード設定
+    // 登場後2秒間の無敵タイマー（60fps想定で120フレーム）
+    this.invincibleTimer = 120;
+    
+    // 体力を数倍に設定 (お空: 400, キスメ: 300)
     if (this.bossType === 'okuu') {
       this.spellName = '爆符「ペタフレア」';
+      this.maxHp = 400;
+      this.hp = 400;
       this.timeLimit = 60;
     } else {
       this.spellName = '怪奇「釣瓶落としの怪」';
+      this.maxHp = 300;
+      this.hp = 300;
       this.timeLimit = 60;
     }
     
@@ -33,10 +38,8 @@ export class Boss {
     
     // 弾幕用タイマーとステート
     this.lastBlueFired = 0;
-    this.blueFireInterval = this.bossType === 'okuu' ? 220 : 250; // 青螺旋の間隔
-    this.blueSpiralAngle = 0;     // 青螺旋の回転角度
+    this.blueSpiralAngle = 0;     // 青・緑らせんの回転角度
     this.lastSolarFired = 0;
-    this.solarFireInterval = this.bossType === 'okuu' ? 1000 : 1200; // 太陽弾 / 落下バケツの間隔
     
     // ボスの移動用パラメータ
     this.targetY = 100; // ボスが定位置とする高さ
@@ -53,19 +56,16 @@ export class Boss {
     this.isAlive = true;
     this.moveTimer = 0;
     this.targetX = this.startX;
+    this.invincibleTimer = 120; // 無敵時間リセット
     
     if (this.bossType === 'okuu') {
       this.spellName = '爆符「ペタフレア」';
-      this.maxHp = 100;
-      this.hp = 100;
-      this.blueFireInterval = 220;
-      this.solarFireInterval = 1000;
+      this.maxHp = 400; // 体力を数倍に
+      this.hp = 400;
     } else {
       this.spellName = '怪奇「釣瓶落としの怪」';
-      this.maxHp = 80; // キスメはHPが少し低め（避けやすさバランス）
-      this.hp = 80;
-      this.blueFireInterval = 250;
-      this.solarFireInterval = 1200;
+      this.maxHp = 300; // 体力を数倍に
+      this.hp = 300;
     }
     
     // ステート初期化
@@ -77,6 +77,11 @@ export class Boss {
 
   update() {
     if (!this.isAlive) return;
+
+    // 無敵タイマーのカウントダウン
+    if (this.invincibleTimer > 0) {
+      this.invincibleTimer--;
+    }
 
     // 1. まず定位置（targetY）まで降りてくる
     if (this.y < this.targetY) {
@@ -207,9 +212,20 @@ export class Boss {
     // 1. 背後の回転魔法陣を先に描画
     this.drawMagicCircle(ctx);
 
-    // 2. ボス本体
+    // 2. ボス本体 (無敵状態の時は点滅描画して視覚的なフィードバックを付与)
     if (this.image && this.image.complete) {
-      ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+      if (this.invincibleTimer > 0) {
+        if (Math.floor(Date.now() / 50) % 2 === 0) {
+          ctx.save();
+          ctx.globalAlpha = 0.25;
+          ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+          ctx.restore();
+        } else {
+          ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        }
+      } else {
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+      }
     } else {
       ctx.fillStyle = this.bossType === 'okuu' ? 'red' : 'green';
       ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -220,6 +236,7 @@ export class Boss {
   }
 
   takeDamage(amount) {
+    if (this.invincibleTimer > 0) return; // 登場直後の2秒間無敵状態の時はダメージ無効
     this.hp -= amount;
     if (this.hp <= 0) {
       this.hp = 0;
@@ -227,77 +244,134 @@ export class Boss {
     }
   }
 
-  // 弾幕発射メソッド (お空 vs キスメ の分岐)
-  fire(timestamp, playerX, playerY) {
+  // 弾幕発射メソッド (残り時間 spellTimer による弾幕変化・激化ロジック)
+  fire(timestamp, playerX, playerY, spellTimer = 60) {
     const bullets = [];
     if (this.y < this.targetY) return bullets; // 定位置に降りるまでは発射しない
 
     const bx = this.x + this.width / 2;
     const by = this.y + this.height / 2;
 
+    // 残り時間による「激怒段階（Phase）」の分岐 (初期時間60秒想定)
+    let attackPhase = 1; // 1: 易しい, 2: 中間, 3: 激化(狂暴化)
+    if (spellTimer > 40) {
+      attackPhase = 1;
+    } else if (spellTimer > 20) {
+      attackPhase = 2;
+    } else {
+      attackPhase = 3;
+    }
+
     if (this.bossType === 'okuu') {
       // ==========================================
-      // 【霊烏路空】 爆符「ペタフレア」
+      // 【霊烏路空】 爆符「ペタフレア」（時間激化）
       // ==========================================
-      // 1. 巨大太陽弾（核熱弾）の発射（1秒おき）
-      if (timestamp - this.lastSolarFired > this.solarFireInterval) {
+      // パラメータの設定
+      let solarFireInterval = 1400; // イージー
+      let solarCount = 1;           // 1way
+      let blueFireInterval = 320;
+      let numBlue = 4;              // 4wayスパイラル
+      let rotationSpeed = 0.06;
+
+      if (attackPhase === 2) {
+        solarFireInterval = 1050; // ミディアム
+        solarCount = 2;           // 2way
+        blueFireInterval = 220;
+        numBlue = 6;              // 6wayスパイラル
+        rotationSpeed = 0.08;
+      } else if (attackPhase === 3) {
+        solarFireInterval = 780;  // 激怒モード
+        solarCount = 3;           // 3way
+        blueFireInterval = 150;
+        numBlue = 8;              // 8way超濃密スパイラル
+        rotationSpeed = 0.11;     // 高速回転
+      }
+
+      // 1. 巨大太陽弾（核熱弾）の発射
+      if (timestamp - this.lastSolarFired > solarFireInterval) {
         const angle = Math.atan2(playerY - by, playerX - bx);
         const solarSpeed = 2.0;
         
-        for (let i = -1; i <= 1; i++) {
-          const a = angle + (i * 0.45);
-          const vx = Math.cos(a) * solarSpeed;
-          const vy = Math.sin(a) * solarSpeed;
-          bullets.push(new Bullet(bx - 70, by - 70, vx, vy, 140, 140, null, true, true));
+        if (solarCount === 1) {
+          // 自機狙い1本
+          bullets.push(new Bullet(bx - 70, by - 70, Math.cos(angle) * solarSpeed, Math.sin(angle) * solarSpeed, 140, 140, null, true, true));
+        } else if (solarCount === 2) {
+          // 少しずらした2way
+          for (let i = -0.5; i <= 0.5; i += 1.0) {
+            const a = angle + (i * 0.35);
+            bullets.push(new Bullet(bx - 70, by - 70, Math.cos(a) * solarSpeed, Math.sin(a) * solarSpeed, 140, 140, null, true, true));
+          }
+        } else {
+          // 密集3way
+          for (let i = -1; i <= 1; i++) {
+            const a = angle + (i * 0.42);
+            bullets.push(new Bullet(bx - 70, by - 70, Math.cos(a) * solarSpeed, Math.sin(a) * solarSpeed, 140, 140, null, true, true));
+          }
         }
         this.lastSolarFired = timestamp;
       }
 
-      // 2. 青い粒弾螺旋（0.22秒おき）
-      if (timestamp - this.lastBlueFired > this.blueFireInterval) {
-        const numBlue = 6;
+      // 2. 青い粒弾らせん
+      if (timestamp - this.lastBlueFired > blueFireInterval) {
         const blueSpeed = 3.6;
-        
         for (let i = 0; i < numBlue; i++) {
           const a = this.blueSpiralAngle + (i * Math.PI * 2) / numBlue;
           const vx = Math.cos(a) * blueSpeed;
           const vy = Math.sin(a) * blueSpeed;
-          bullets.push(new Bullet(bx - 7, by - 7, vx, vy, 14, 14, null, true, false));
+          bullets.push(new Bullet(bx - 7, by - 7, vx, vy, 14, 14, null, true, false, false, 'blue'));
         }
         
-        this.blueSpiralAngle += 0.08;
+        this.blueSpiralAngle += rotationSpeed;
         this.lastBlueFired = timestamp;
       }
     } else {
       // ==========================================
-      // 【キスメ】 怪奇「釣瓶落としの怪」
+      // 【キスメ】 怪奇「釣瓶落としの怪」（時間激化）
       // ==========================================
-      // 1. 美しい青い水滴の多方向らせん弾幕 (0.25秒おき)
-      if (timestamp - this.lastBlueFired > this.blueFireInterval) {
-        const numBlue = 8;     // 8方向
-        const blueSpeed = 2.6; // お空よりやや遅くして間をすり抜けやすく
-        
+      // パラメータの設定
+      let blueFireInterval = 380; // イージー
+      let numBlue = 5;              // 5wayらせん水滴
+      let rotationSpeed = 0.08;
+      let solarFireInterval = 1600; 
+      let numBuckets = 1;           // バケツ落下の数
+
+      if (attackPhase === 2) {
+        blueFireInterval = 250;   // ミディアム
+        numBlue = 8;              // 8wayらせん水滴
+        rotationSpeed = 0.12;
+        solarFireInterval = 1100;
+        numBuckets = 2;           // 2本落下
+      } else if (attackPhase === 3) {
+        blueFireInterval = 170;   // 激怒モード
+        numBlue = 11;             // 11way超濃密水滴らせん
+        rotationSpeed = 0.16;     // 超高速
+        solarFireInterval = 750;  // 連続バケツ落とし
+        numBuckets = 3;           // 3本同時落下
+      }
+
+      // 1. 水滴らせん弾幕 (緑色小丸弾)
+      if (timestamp - this.lastBlueFired > blueFireInterval) {
+        const blueSpeed = 2.5;
         for (let i = 0; i < numBlue; i++) {
           const a = this.blueSpiralAngle + (i * Math.PI * 2) / numBlue;
           const vx = Math.cos(a) * blueSpeed;
           const vy = Math.sin(a) * blueSpeed;
-          bullets.push(new Bullet(bx - 7, by - 7, vx, vy, 14, 14, null, true, false));
+          bullets.push(new Bullet(bx - 7, by - 7, vx, vy, 14, 14, null, true, false, false, 'green'));
         }
         
-        this.blueSpiralAngle += 0.12; // らせんのひねり
+        this.blueSpiralAngle += rotationSpeed;
         this.lastBlueFired = timestamp;
       }
 
-      // 2. 釣瓶おとし（落下バケツ）：画面上部のランダムXから直滑降バケツ弾 (1.2秒おき)
-      if (timestamp - this.lastSolarFired > this.solarFireInterval) {
-        const numBuckets = 2; // 一度に2つの釣瓶が落下
+      // 2. 釣瓶おとし（落下バケツ長弾）
+      if (timestamp - this.lastSolarFired > solarFireInterval) {
+        const speedY = 4.2; // 釣瓶落としの直滑降スピード
+        
         for (let i = 0; i < numBuckets; i++) {
-          const rx = Math.random() * (this.canvasWidth - 60) + 30; // プレイエリア全域
+          // バケツが複数ある時は重ならないように左右に散らす
+          const rx = Math.random() * (this.canvasWidth - 70) + 35;
           const ry = -10;
-          const speedY = 4.2; // 釣瓶落としならではの高速直滑降！
-          
-          // isBucket = true でエメラルドに輝く巨大弾として生成
-          bullets.push(new Bullet(rx - 20, ry, 0, speedY, 40, 40, null, true, false, true));
+          bullets.push(new Bullet(rx - 20, ry, 0, speedY, 40, 40, null, true, false, true, 'brown'));
         }
         this.lastSolarFired = timestamp;
       }
