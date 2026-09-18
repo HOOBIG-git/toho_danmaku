@@ -243,3 +243,110 @@ body {
   font-family: 'Hiragino Kaku Gothic Pro', sans-serif;
   letter-spacing: 1px;
 }
+
+/* --- パスワード認証画面 --- */
+#passwordScreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #1f0103 0%, #050001 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 200; /* 全オーバーレイの最前面 */
+  color: white;
+  text-align: center;
+  font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
+  transition: opacity 0.3s ease;
+}
+
+.gate-title {
+  font-family: 'Georgia', 'Hiragino Mincho ProN', serif;
+  font-size: 22px;
+  color: #e5b22d;
+  text-shadow: 0 0 12px rgba(229, 178, 45, 0.4);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.gate-sub {
+  font-size: 12px;
+  letter-spacing: 2px;
+  font-weight: normal;
+  color: #bbb;
+}
+
+.gate-desc {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 24px;
+}
+
+.input-box {
+  position: relative;
+  width: 220px;
+  margin-bottom: 20px;
+}
+
+/* スマホSafariでの自動ズーム防止のため font-size: 16px 以上必須 */
+#passInput {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-align: center;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#passInput:focus {
+  border-color: #e5b22d;
+  box-shadow: 0 0 10px rgba(229, 178, 45, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.pass-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #ff4d4d;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.pass-error.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.pass-btn {
+  width: 140px;
+  padding: 9px 0;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #fff;
+  background: linear-gradient(135deg, #8b0000, #4a0000);
+  border: 1px solid #d4af37;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.1s, background 0.2s;
+}
+
+.pass-btn:active {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, #4a0000, #8b0000);
+}
