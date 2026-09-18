@@ -604,90 +604,127 @@ function gameLoop(timestamp) {
 
   const hx = SIDEBAR_X + 15;
 
-  ctx.font = 'bold 10px "Georgia", serif';
+  // A. モードタイトル
+  ctx.font = '700 9px "Cinzel", serif';
   ctx.fillStyle = '#888888';
   ctx.textAlign = 'left';
   ctx.fillText('SPELL PRACTICE', hx, 30);
 
-  ctx.font = 'bold 11px "Georgia", serif';
+  // B. Hi-Score
+  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
   ctx.fillStyle = '#ff4d4d';
   ctx.fillText('Hi-Score', hx, 65);
-  
-  ctx.font = 'bold 13px "Georgia", serif';
+
+  ctx.font = '700 13px "Cinzel", monospace';
   ctx.fillStyle = '#ffffff';
   ctx.fillText('999999990', hx, 82);
 
-  ctx.font = 'bold 11px "Georgia", serif';
+  // C. Score
+  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
   ctx.fillStyle = '#ff4d4d';
   ctx.fillText('Score', hx, 115);
-  
-  ctx.font = 'bold 13px "Georgia", serif';
+
+  ctx.font = '700 13px "Cinzel", monospace';
   ctx.fillStyle = '#ffffff';
   ctx.fillText(playerScore.toString().padStart(9, '0'), hx, 132);
 
-  ctx.font = 'bold 11px "Georgia", serif';
+  // D. Player
+  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
   ctx.fillStyle = '#ff4d4d';
   ctx.fillText('Player', hx, 175);
-  
-  ctx.font = 'bold 14px "Georgia", "Arial", sans-serif';
+
+  ctx.font = '700 13px "Cinzel", sans-serif';
   ctx.fillStyle = '#ff4d4d';
   ctx.fillText('★ '.repeat(player.lives).trim() || 'None', hx, 192);
 
-  ctx.font = 'bold 11px "Georgia", serif';
+  // E. Spell
+  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
   ctx.fillStyle = '#ff4d4d';
   ctx.fillText('Spell', hx, 225);
-  
-  ctx.font = 'bold 14px "Georgia", "Arial", sans-serif';
+
+  ctx.font = '700 13px "Cinzel", sans-serif';
   ctx.fillStyle = '#4dff4d';
   ctx.fillText('★ '.repeat(player.bombs).trim() || 'None', hx, 242);
 
-  ctx.font = 'bold 11px "Georgia", serif';
+  // F. Power
+  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
   ctx.fillStyle = '#ff4d4d';
   ctx.fillText('Power', hx, 285);
-  
-  ctx.font = 'bold 13px "Georgia", serif';
+
+  ctx.font = '700 12px "Cinzel", monospace';
   ctx.fillStyle = '#ffffff';
   ctx.fillText(player.power.toFixed(2) + ' / 4.00', hx, 302);
 
-  ctx.font = 'bold 11px "Georgia", serif';
+  // G. Graze
+  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
   ctx.fillStyle = '#4dff4d'; 
   ctx.fillText('Graze', hx, 345);
-  
-  ctx.font = 'bold 13px "Georgia", serif';
+
+  ctx.font = '700 13px "Cinzel", monospace';
   ctx.fillStyle = '#ffffff';
   ctx.fillText(player.graze.toString().padStart(5, '0'), hx, 362);
 
+  // H. Spell Bonus
   if (boss.isAlive && gameState === 'PLAYING') {
-    ctx.font = 'italic bold 11px "Georgia", serif';
+    ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
     ctx.fillStyle = '#ffaa00'; 
     ctx.fillText('Spell Bonus', hx, 415);
     
-    ctx.font = 'bold 12px "Georgia", serif';
+    ctx.font = '700 12px "Cinzel", monospace';
     ctx.fillStyle = '#ffffff';
     ctx.fillText(Math.floor(spellBonus).toString().padStart(8, '0'), hx, 432);
   }
   ctx.restore();
 
-  // プレイエリア内のタイマー＆スペル名
   ctx.save();
   ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
   ctx.shadowBlur = 4;
   ctx.shadowOffsetX = 1.5;
   ctx.shadowOffsetY = 1.5;
 
-  ctx.font = 'bold 34px "Georgia", serif';
-  ctx.fillStyle = spellTimer <= 10 ? '#ff4d4d' : '#ffffff';
-  ctx.textAlign = 'right';
-  ctx.fillText(Math.ceil(spellTimer).toString().padStart(2, '0'), 350, 40);
+  // I. 残り時間タイマー (秒 + ミリ秒の分割高速表示)
+  const sec = Math.floor(spellTimer).toString().padStart(2, '0');
+  const ms = Math.floor((spellTimer % 1) * 100).toString().padStart(2, '0');
+  const timerColor = spellTimer <= 10 ? '#ff3b3b' : '#ffffff';
 
+  ctx.textAlign = 'right';
+  // 小数部（ミリ秒）
+  ctx.font = '700 18px "Cinzel", serif';
+  ctx.fillStyle = timerColor;
+  ctx.fillText(ms, 352, 42);
+
+  // 整数部（秒）
+  ctx.font = '900 32px "Cinzel", serif';
+  ctx.fillText(sec + '.', 326, 42);
+
+  // J. スペルカード名（金色グラデーション ＋ 黒い袋文字縁取り）
   if (boss.isAlive) {
-    ctx.font = 'italic 12px "Georgia", "Hiragino Kaku Gothic Pro", sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    const spellX = 350;
+    const spellY = 618;
+    
+    ctx.font = '800 13px "Shippori Mincho", serif';
     ctx.textAlign = 'right';
-    ctx.fillText(boss.spellName, 350, 615);
+
+    // 視認性を確保する黒フチ
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 2;
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 3.5;
+    ctx.strokeText(boss.spellName, spellX, spellY);
+
+    // 金色グラデーション
+    const textGrad = ctx.createLinearGradient(spellX - 160, spellY - 12, spellX, spellY);
+    textGrad.addColorStop(0, '#fff2a8');
+    textGrad.addColorStop(1, '#e5b22d');
+    ctx.fillStyle = textGrad;
+    ctx.fillText(boss.spellName, spellX, spellY);
+
+    // 右上の履歴表示 (HISTORY)
+    ctx.font = '700 9px "Cinzel", serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.fillText('HISTORY  01/05', spellX, spellY - 16);
   }
   ctx.restore();
-
   ctx.restore();
   requestAnimationFrame(gameLoop);
 }
