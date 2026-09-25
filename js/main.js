@@ -133,9 +133,15 @@ document.querySelectorAll('.boss-select-btn').forEach(btn => {
     if (type === 'okuu') {
       boss.image = okuuImg;
       boss.reset('okuu');
-    } else {
+    } else if (type === 'okuu2') {
+      boss.image = okuuImg;
+      boss.reset('okuu2');
+    } else if (type === 'kisume') {
       boss.image = kisumeImg;
       boss.reset('kisume');
+    } else if (type === 'kisume2') {
+      boss.image = kisumeImg;
+      boss.reset('kisume2');
     }
     
     bullets = [];
@@ -307,6 +313,24 @@ function gameLoop(timestamp) {
 
     // 1. 自機の更新とショット
     player.update(input, PLAY_WIDTH, PLAY_HEIGHT);
+    
+    // ★追加：お空2枚目（人工太陽）の引力（重力）処理
+    if (boss.bossType === 'okuu2' && boss.isAlive && boss.y >= boss.targetY) {
+      const px = player.x + player.width / 2;
+      const py = player.y + player.height / 2;
+      const bx = boss.x + boss.width / 2;
+      const by = boss.y + boss.height / 2;
+      const dx = bx - px;
+      const dy = by - py;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 5) {
+        // 通常時は引力 1.1、低速時は精密操作のために 0.45 に減衰
+        const pullStrength = input.isSlowMode ? 0.45 : 1.1;
+        player.x += (dx / dist) * pullStrength;
+        player.y += (dy / dist) * pullStrength;
+      }
+    }
+    
     bullets.push(...player.fire(timestamp, input));
 
     const px = player.x + player.width / 2;

@@ -20,11 +20,21 @@ export class Boss {
     // 登場後2秒間の無敵タイマー（60fps想定で120フレーム）
     this.invincibleTimer = 120;
     
-    // 体力を数倍に設定 (お空: 400, キスメ: 300)
+    // 体力を数倍に設定
     if (this.bossType === 'okuu') {
       this.spellName = '爆符「ペタフレア」';
       this.maxHp = 400;
       this.hp = 400;
+      this.timeLimit = 60;
+    } else if (this.bossType === 'okuu2') {
+      this.spellName = '「地獄の極熱人工太陽」';
+      this.maxHp = 450;
+      this.hp = 450;
+      this.timeLimit = 60;
+    } else if (this.bossType === 'kisume2') {
+      this.spellName = '井戸符「仄暗い井戸の底から」';
+      this.maxHp = 350;
+      this.hp = 350;
       this.timeLimit = 60;
     } else {
       this.spellName = '怪奇「釣瓶落としの怪」';
@@ -62,6 +72,14 @@ export class Boss {
       this.spellName = '爆符「ペタフレア」';
       this.maxHp = 400; // 体力を数倍に
       this.hp = 400;
+    } else if (this.bossType === 'okuu2') {
+      this.spellName = '「地獄の極熱人工太陽」';
+      this.maxHp = 450;
+      this.hp = 450;
+    } else if (this.bossType === 'kisume2') {
+      this.spellName = '井戸符「仄暗い井戸の底から」';
+      this.maxHp = 350;
+      this.hp = 350;
     } else {
       this.spellName = '怪奇「釣瓶落としの怪」';
       this.maxHp = 300; // 体力を数倍に
@@ -254,12 +272,25 @@ export class Boss {
 
     // 残り時間による「激怒段階（Phase）」の分岐 (初期時間60秒想定)
     let attackPhase = 1; // 1: 易しい, 2: 中間, 3: 激化(狂暴化)
-    if (spellTimer > 40) {
-      attackPhase = 1;
-    } else if (spellTimer > 20) {
-      attackPhase = 2;
+    
+    // 【霊烏路空2】 のみHPベースでフェーズ管理
+    if (this.bossType === 'okuu2') {
+        const hpRatio = this.hp / this.maxHp;
+        if (hpRatio > 0.66) {
+            attackPhase = 1;
+        } else if (hpRatio > 0.33) {
+            attackPhase = 2;
+        } else {
+            attackPhase = 3;
+        }
     } else {
-      attackPhase = 3;
+        if (spellTimer > 40) {
+            attackPhase = 1;
+        } else if (spellTimer > 20) {
+            attackPhase = 2;
+        } else {
+            attackPhase = 3;
+        }
     }
 
     if (this.bossType === 'okuu') {
@@ -323,6 +354,106 @@ export class Boss {
         
         this.blueSpiralAngle += rotationSpeed;
         this.lastBlueFired = timestamp;
+      }
+    } else if (this.bossType === 'okuu2') {
+      // ==========================================
+      // 【霊烏路空】 「地獄 of 極熱人工太陽」（ダイナミック引力＋同心円フレア）
+      // ==========================================
+      let ringInterval = 1200;
+      let ringCount = 18;
+      let ringSpeed = 2.5;
+      let solarInterval = 1000;
+      let numSolars = 3;
+      let solarSpeed = 2.2;
+
+      if (attackPhase === 2) {
+        ringInterval = 800;
+        ringCount = 22;
+        ringSpeed = 2.8;
+        solarInterval = 700;
+        numSolars = 3;
+        solarSpeed = 2.6;
+      } else if (attackPhase === 3) {
+        ringInterval = 500;
+        ringCount = 26;
+        ringSpeed = 3.2;
+        solarInterval = 450;
+        numSolars = 4;
+        solarSpeed = 3.0;
+      }
+
+      // 1. 全方位環状ショット (お空背後から波打つフレア)
+      if (timestamp - this.lastBlueFired > ringInterval) {
+        for (let i = 0; i < ringCount; i++) {
+          const angle = (i * Math.PI * 2) / ringCount;
+          bullets.push(new Bullet(bx - 7, by - 7, Math.cos(angle) * ringSpeed, Math.sin(angle) * ringSpeed, 14, 14, null, true, false, false, 'red'));
+        }
+        this.lastBlueFired = timestamp;
+      }
+
+      // 2. 微小サイズの太陽弾 (各方向に回転しながら発射)
+      if (timestamp - this.lastSolarFired > solarInterval) {
+        if (!this.solarAngleOffset) this.solarAngleOffset = 0;
+        const baseAngle = this.solarAngleOffset;
+        for (let i = 0; i < numSolars; i++) {
+          const angle = baseAngle + (i * Math.PI * 2) / numSolars;
+          bullets.push(new Bullet(bx - 50, by - 50, Math.cos(angle) * solarSpeed, Math.sin(angle) * solarSpeed, 100, 100, null, true, true));
+        }
+        this.solarAngleOffset += 0.35;
+        this.lastSolarFired = timestamp;
+      }
+    } else if (this.bossType === 'kisume2') {
+      // ==========================================
+      // 【キスメ】 井戸符「仄暗い井戸の底から」（壁バウンド＋水泡せり上がり）
+      // ==========================================
+      let bounceInterval = 600;
+      let numBounce = 1;
+      let bounceSpeed = 2.5;
+      let bubbleInterval = 300;
+      let bubbleSpeedY = -0.8;
+
+      if (attackPhase === 2) {
+        bounceInterval = 450;
+        numBounce = 2;
+        bounceSpeed = 3.0;
+        bubbleInterval = 200;
+        bubbleSpeedY = -1.0;
+      } else if (attackPhase === 3) {
+        bounceInterval = 320;
+        numBounce = 3;
+        bounceSpeed = 3.5;
+        bubbleInterval = 140;
+        bubbleSpeedY = -1.3;
+      }
+
+      // 1. 左右斜め下に飛ぶ反射バウンド弾 (青小丸弾)
+      if (timestamp - this.lastBlueFired > bounceInterval) {
+        for (let i = 0; i < numBounce; i++) {
+          const angle = Math.PI * 0.25 + (i * Math.PI * 0.5) / (numBounce - 1); // 45度〜135度
+          const vx = Math.cos(angle) * bounceSpeed;
+          const vy = Math.sin(angle) * bounceSpeed;
+          bullets.push(new Bullet(bx - 7, by - 7, vx, vy, 14, 14, null, true, false, false, 'blue', true, false));
+        }
+        this.lastBlueFired = timestamp;
+      }
+
+      // 2. 井戸の底から湧き上がる水泡弾 (緑小丸弾、サイン波移動)
+      if (timestamp - this.lastSolarFired > bubbleInterval) {
+        const rx = Math.random() * (360 - 20) + 10;
+        bullets.push(new Bullet(rx, 640, 0, bubbleSpeedY, 14, 14, null, true, false, false, 'green', false, true));
+        this.lastSolarFired = timestamp;
+      }
+
+      // 3. 自機狙い泥石弾 (Phase 2 & 3 のみ)
+      if (attackPhase >= 2) {
+        if (!this.lastAimedFired) this.lastAimedFired = 0;
+        let aimedInterval = attackPhase === 2 ? 1500 : 1000;
+        if (timestamp - this.lastAimedFired > aimedInterval) {
+          const angle = Math.atan2(playerY - by, playerX - bx);
+          const speed = 2.2;
+          bullets.push(new Bullet(bx - 7, by - 7, Math.cos(angle) * speed, Math.sin(angle) * speed, 14, 14, null, true, false, false, 'red'));
+          this.lastAimedFired = timestamp;
+        }
       }
     } else {
       // ==========================================

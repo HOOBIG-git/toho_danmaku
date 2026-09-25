@@ -1,6 +1,6 @@
 // js/bullet.js (丸ごと上書き)
 export class Bullet {
-  constructor(x, y, vx, vy, width, height, image, isEnemy = false, isSolar = false, isBucket = false, colorType = 'blue') {
+  constructor(x, y, vx, vy, width, height, image, isEnemy = false, isSolar = false, isBucket = false, colorType = 'blue', isBouncing = false, isBubble = false) {
     this.x = x;
     this.y = y;
     this.vx = vx;
@@ -15,11 +15,30 @@ export class Bullet {
     this.isBucket = isBucket;   // ★追加：怪奇「釣瓶落としの怪」用バケツ弾フラグ
     this.colorType = colorType; // ★追加：随伴小弾の色タイプ ('blue', 'green', 'red', etc.)
     this.isGrazed = false;     // ★追加：この弾ですでにグレイズしたか
+    this.isBouncing = isBouncing; // ★追加：左右壁バウンドフラグ
+    this.isBubble = isBubble;     // ★追加：サイン波上昇フラグ
   }
 
   update() {
-    this.x += this.vx;
-    this.y += this.vy;
+    if (this.isBubble) {
+      this.y += this.vy; // 負の値（上昇）
+      this.x += Math.sin(this.y * 0.05) * 0.8;
+    } else {
+      this.x += this.vx;
+      this.y += this.vy;
+    }
+
+    // ★追加：壁バウンド処理
+    if (this.isBouncing) {
+      const playWidth = 360;
+      if (this.x < 0) {
+        this.x = 0;
+        this.vx = -this.vx;
+      } else if (this.x + this.width > playWidth) {
+        this.x = playWidth - this.width;
+        this.vx = -this.vx;
+      }
+    }
 
     // ★原作再現：太陽弾（核熱弾）は画面下部（Y座標が65%以降）に達すると、急激に収縮・凝縮する
     if (this.isSolar) {
