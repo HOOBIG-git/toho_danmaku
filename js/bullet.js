@@ -28,7 +28,7 @@ export class Bullet {
       this.y += this.vy;
     }
 
-    // ★追加：壁バウンド処理
+    // 壁バウンド処理
     if (this.isBouncing) {
       const playWidth = 360;
       if (this.x < 0) {
@@ -40,7 +40,7 @@ export class Bullet {
       }
     }
 
-    // ★原作再現：太陽弾（核熱弾）は画面下部（Y座標が65%以降）に達すると、急激に収縮・凝縮する
+    // 画面下部（Y座標が65%以降）に達すると凝縮する
     if (this.isSolar) {
       const triggerY = 640 * 0.65; // 画面高の65%付近に引きつけると
       if (this.y >= triggerY && this.width > 45) {
@@ -58,7 +58,6 @@ export class Bullet {
   draw(ctx) {
     if (this.isEnemy) {
       if (this.isSolar) {
-        // ★原作再現：太陽弾のwobble小刻み振動
         const wobbleX = (Math.random() - 0.5) * 4.5;
         const wobbleY = (Math.random() - 0.5) * 4.5;
         
@@ -69,9 +68,9 @@ export class Bullet {
         ctx.save();
         const pulse = 1.0 + Math.sin(Date.now() * 0.02) * 0.06;
         const grad = ctx.createRadialGradient(cx, cy, r * 0.1, cx, cy, r * pulse);
-        grad.addColorStop(0, '#ffffff'); // 超高温の白熱コア
-        grad.addColorStop(0.3, '#ffaa00'); // 眩しい黄金フレア
-        grad.addColorStop(0.7, '#ff3300'); // 核融合の赤
+        grad.addColorStop(0, '#ffffff'); 
+        grad.addColorStop(0.3, '#ffaa00');
+        grad.addColorStop(0.7, '#ff3300');
         grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
         
         ctx.beginPath();
@@ -80,22 +79,20 @@ export class Bullet {
         ctx.fill();
         ctx.restore();
       } else if (this.isBucket) {
-        // ★追加：キスメの釣瓶バケツ弾（縦長に引き伸ばした楕円木目調デザインに劇的進化！）
         const cx = this.x + this.width / 2;
         const cy = this.y + this.height / 2;
         const rx = this.width / 2;
         const ry = this.height * 0.72; // Y軸方向を1.4倍近く引き伸ばす（釣瓶落とし再現）
         
         ctx.save();
-        // 釣瓶バケツらしいアンティークな木製ブラウンと温和なオレンジのグラデーション
         const grad = ctx.createRadialGradient(cx, cy, rx * 0.15, cx, cy, ry);
-        grad.addColorStop(0, '#ffffff');      // 白熱コア
-        grad.addColorStop(0.25, '#ffcc44');   // 内壁の輝き
-        grad.addColorStop(0.8, '#8b4513');    // 釣瓶の年季の入った茶（サドルブラウン）
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.25, '#ffcc44');
+        grad.addColorStop(0.8, '#8b4513'); 
         grad.addColorStop(1, 'rgba(139, 69, 19, 0)');
         
         ctx.beginPath();
-        // Y方向に引き伸ばした美しい縦型楕円を描く
+        // Y方向に引き伸ばし縦型楕円を描く
         ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
         ctx.fillStyle = grad;
         ctx.fill();
@@ -106,7 +103,7 @@ export class Bullet {
         ctx.stroke();
         ctx.restore();
       } else {
-        // ★追加：通常粒弾の描画（colorTypeによる色調変化）
+        // 通常粒弾の描画（colorTypeによる色調変化）
         const radius = this.width / 2;
         ctx.beginPath();
         ctx.arc(this.x + radius, this.y + radius, radius, 0, Math.PI * 2);

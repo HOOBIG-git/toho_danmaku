@@ -150,7 +150,7 @@ body {
   font-size: 16px;
   font-weight: bold;
   color: white;
-  background: linear-gradient(135deg, #4a5568, #2d3748); /* 鋼鉄風ダークブルー */
+  background: linear-gradient(135deg, #4a5568, #2d3748);
   border: 2px solid white;
   border-radius: 20px;
   box-shadow: 0 4px 12px rgba(74, 85, 104, 0.4);
@@ -190,7 +190,7 @@ body {
   font-family: 'Georgia', 'Hiragino Mincho ProN', 'MS Mincho', serif;
   font-size: 26px;
   font-weight: bold;
-  color: #e5b22d; /* 美しいゴールド */
+  color: #e5b22d; 
   text-shadow: 0 0 15px rgba(229, 178, 45, 0.5);
   text-align: center;
   line-height: 1.4;
