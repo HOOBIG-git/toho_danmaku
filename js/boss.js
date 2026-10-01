@@ -22,22 +22,27 @@ export class Boss {
     
     // 体力を数倍に設定
     if (this.bossType === 'okuu') {
-      this.spellName = '爆符「ペタフレア」';
+      this.spellName = '核熱符「ソーラー・フレア・ダンス」';
       this.maxHp = 400;
       this.hp = 400;
       this.timeLimit = 60;
     } else if (this.bossType === 'okuu2') {
-      this.spellName = '「地獄の極熱人工太陽」';
+      this.spellName = '重力符「シンギュラリティ・サン」';
       this.maxHp = 450;
       this.hp = 450;
       this.timeLimit = 60;
+    } else if (this.bossType === 'okuu_final') {
+      this.spellName = '終焉符「超新星爆発の残滓」';
+      this.maxHp = 600;
+      this.hp = 600;
+      this.timeLimit = 80;
     } else if (this.bossType === 'kisume2') {
-      this.spellName = '井戸符「仄暗い井戸の底から」';
+      this.spellName = '井戸符「底なしの水泡迷宮」';
       this.maxHp = 350;
       this.hp = 350;
       this.timeLimit = 60;
     } else {
-      this.spellName = '怪奇「釣瓶落としの怪」';
+      this.spellName = '怪奇「水底より出でる釣瓶」';
       this.maxHp = 300;
       this.hp = 300;
       this.timeLimit = 60;
@@ -69,19 +74,23 @@ export class Boss {
     this.invincibleTimer = 120; // 無敵時間リセット
     
     if (this.bossType === 'okuu') {
-      this.spellName = '爆符「ペタフレア」';
+      this.spellName = '核熱符「ソーラー・フレア・ダンス」';
       this.maxHp = 400; // 体力を数倍に
       this.hp = 400;
     } else if (this.bossType === 'okuu2') {
-      this.spellName = '「地獄の極熱人工太陽」';
+      this.spellName = '重力符「シンギュラリティ・サン」';
       this.maxHp = 450;
       this.hp = 450;
+    } else if (this.bossType === 'okuu_final') {
+      this.spellName = '終焉符「超新星爆発の残滓」';
+      this.maxHp = 600;
+      this.hp = 600;
     } else if (this.bossType === 'kisume2') {
-      this.spellName = '井戸符「仄暗い井戸の底から」';
+      this.spellName = '井戸符「底なしの水泡迷宮」';
       this.maxHp = 350;
       this.hp = 350;
     } else {
-      this.spellName = '怪奇「釣瓶落としの怪」';
+      this.spellName = '怪奇「水底より出でる釣瓶」';
       this.maxHp = 300; // 体力を数倍に
       this.hp = 300;
     }
@@ -227,6 +236,42 @@ export class Boss {
   draw(ctx) {
     if (!this.isAlive) return;
 
+    // --- 予兆演出 (Attack Telegraphs) ---
+    const now = Date.now();
+    if (this.y >= this.targetY) {
+      const bx = this.x + this.width / 2;
+      const by = this.y + this.height / 2;
+
+      if (this.bossType === 'okuu') {
+        // 爆符「ペタフレア」の核熱弾予兆
+        const solarInterval = this.bossType === 'okuu' ? 1400 : 1000; // 簡易的な判定
+        if (now - this.lastSolarFired > solarInterval - 200) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255, 0, 0, 0.2)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath();
+          // 自機方向へのガイドライン (main.jsからplayer座標を渡す必要があるため、ここでは簡易的に中心方向へ)
+          ctx.moveTo(bx, by);
+          ctx.lineTo(bx, by + 200);
+          ctx.stroke();
+          ctx.restore();
+        }
+      } else if (this.bossType === 'kisume') {
+        // 怪奇「釣瓶落としの怪」のバケツ弾予兆
+        if (now - this.lastSolarFired > 1600 - 300) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
+          ctx.lineWidth = 10;
+          ctx.beginPath();
+          ctx.moveTo(bx, -10);
+          ctx.lineTo(bx, by);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+
     // 1. 背後の回転魔法陣を先に描画
     this.drawMagicCircle(ctx);
 
@@ -262,6 +307,7 @@ export class Boss {
     }
   }
 
+  // 弾幕発射メソッド (残り時間 spellTimer による弾幕変化・激化ロジック)
   // 弾幕発射メソッド (残り時間 spellTimer による弾幕変化・激化ロジック)
   fire(timestamp, playerX, playerY, spellTimer = 60) {
     const bullets = [];
@@ -453,6 +499,80 @@ export class Boss {
           const speed = 2.2;
           bullets.push(new Bullet(bx - 7, by - 7, Math.cos(angle) * speed, Math.sin(angle) * speed, 14, 14, null, true, false, false, 'red'));
           this.lastAimedFired = timestamp;
+        }
+      }
+    } else if (this.bossType === 'okuu_final') {
+      // ==========================================
+      // 【霊烏路空】 「サブタレイニアン・サン」（究極の核熱）
+      // ==========================================
+      const hpRatio = this.hp / this.maxHp;
+
+      if (hpRatio > 0.7) {
+        // Phase 1: 収縮する太陽の檻
+        if (timestamp - this.lastSolarFired > 1100) {
+          const num = 6;
+          for (let i = 0; i < num; i++) {
+            const angle = (i * Math.PI * 2) / num + this.blueSpiralAngle;
+            const dist = 320;
+            const sx = bx + Math.cos(angle) * dist;
+            const sy = by + Math.sin(angle) * dist;
+            const vx = -Math.cos(angle) * 1.8;
+            const vy = -Math.sin(angle) * 1.8;
+            bullets.push(new Bullet(sx - 60, sy - 60, vx, vy, 120, 120, null, true, true));
+          }
+          this.blueSpiralAngle += 0.3;
+          this.lastSolarFired = timestamp;
+        }
+        if (timestamp - this.lastBlueFired > 200) {
+          const a = Math.random() * Math.PI * 2;
+          bullets.push(new Bullet(bx - 7, by - 7, Math.cos(a) * 3.5, Math.sin(a) * 3.5, 14, 14, null, true, false, false, 'red'));
+          this.lastBlueFired = timestamp;
+        }
+      } else if (hpRatio > 0.35) {
+        // Phase 2: 連鎖爆発と極彩色螺旋
+        if (timestamp - this.lastSolarFired > 1800) {
+          for (let i = 0; i < 3; i++) {
+            const rx = Math.random() * 300 + 30;
+            const ry = Math.random() * 250 + 100;
+            bullets.push(new Bullet(rx - 45, ry - 45, 0, 0, 90, 90, null, true, true, false, 'blue', false, false, {
+              waitTimer: 60,
+              isWaitAndGo: true,
+              targetAngle: Math.random() * Math.PI * 2,
+              accel: 0.08
+            }));
+          }
+          this.lastSolarFired = timestamp;
+        }
+        if (timestamp - this.lastBlueFired > 70) {
+          const num = 3;
+          for (let i = 0; i < num; i++) {
+            const a = this.blueSpiralAngle + (i * Math.PI * 2) / num;
+            bullets.push(new Bullet(bx - 7, by - 7, Math.cos(a) * 3, Math.sin(a) * 3, 14, 14, null, true, false, false, 'blue'));
+            bullets.push(new Bullet(bx - 7, by - 7, Math.cos(-a * 1.2) * 3, Math.sin(-a * 1.2) * 3, 14, 14, null, true, false, false, 'green'));
+          }
+          this.blueSpiralAngle += 0.12;
+          this.lastBlueFired = timestamp;
+        }
+      } else {
+        // Phase 3: 終焉・グラビティ・リバース
+        if (timestamp - this.lastBlueFired > 120) {
+          const num = 10;
+          const aOffset = Math.random() * Math.PI;
+          for (let i = 0; i < num; i++) {
+            const a = (i * Math.PI * 2) / num + aOffset;
+            bullets.push(new Bullet(bx - 7, by - 7, Math.cos(a) * 5, Math.sin(a) * 5, 14, 14, null, true, false, false, 'red', false, false, {
+              waitTimer: 50,
+              isWaitAndGo: true,
+              targetAngle: Math.atan2(playerY - by, playerX - bx),
+              accel: 0.12,
+              maxSpeed: 7
+            }));
+          }
+          this.lastBlueFired = timestamp;
+        }
+        if (timestamp - this.lastSolarFired > 1500) {
+          bullets.push(new Bullet(bx - 60, by - 60, 0, 0.5, 120, 120, null, true, true));
+          this.lastSolarFired = timestamp;
         }
       }
     } else {

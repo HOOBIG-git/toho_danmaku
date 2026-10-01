@@ -52,15 +52,15 @@ export class Player {
     return this.invincibleTimer > 0 || this.bombTimer > 0;
   }
 
-  update(input, canvasWidth, canvasHeight) {
+  update(input, canvasWidth, canvasHeight, speedMultiplier = 1.0) {
     // 無敵タイマーの更新
     if (this.invincibleTimer > 0) this.invincibleTimer--;
     if (this.bombTimer > 0) this.bombTimer--;
 
     // ドラッグ移動量(delta)を取得し、低速モード時は感度を減衰
     const sensitivity = input.isSlowMode ? 0.5 : 1.2;
-    this.x += input.deltaX * sensitivity;
-    this.y += input.deltaY * sensitivity;
+    this.x += input.deltaX * sensitivity * speedMultiplier;
+    this.y += input.deltaY * sensitivity * speedMultiplier;
 
     // ★追加：移動方向に応じたスプライト画像の切り替え (左移動ならL、右移動ならR、静止・上下なら正面)
     if (input.deltaX < -0.1) {

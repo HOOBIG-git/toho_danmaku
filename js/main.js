@@ -22,7 +22,7 @@ const SIDEBAR_X = 360;
 const SIDEBAR_WIDTH = 120;
 
 function resizeCanvas() {
-  joyCanvas.width = controlPad.clientWidth; 
+  joyCanvas.width = controlPad.clientWidth;
   joyCanvas.height = controlPad.clientHeight;
 }
 window.addEventListener('resize', resizeCanvas);
@@ -41,18 +41,21 @@ const kisumeImg = new Image(); kisumeImg.src = 'assets/kisume.png';
 const input = new InputManager(controlPad, joyCanvas);
 const player = new Player(PLAY_WIDTH / 2, PLAY_HEIGHT * 0.8, playerImg, playerLImg, playerRImg, playerBulletImg);
 
+let defaultSlowMode = false; // ★追加：デフォルト低速設定
+let waterLevel = 640; // ★追加：水位管理変数
+
 let boss = new Boss(
-  PLAY_WIDTH / 2 - 40, 
-  -100, 
-  80, 
-  80, 
-  100, 
-  okuuImg, 
-  PLAY_WIDTH, 
+  PLAY_WIDTH / 2 - 40,
+  -100,
+  80,
+  80,
+  100,
+  okuuImg,
+  PLAY_WIDTH,
   'okuu'
 );
 
-let bullets = []; 
+let bullets = [];
 let enemyBullets = [];
 let items = [];
 
@@ -83,6 +86,15 @@ const resultTitle = document.getElementById('resultTitle');
 const resultSubtitle = document.getElementById('resultSubtitle');
 const retryButton = document.getElementById('retryButton');
 const titleButton = document.getElementById('titleButton');
+const slowModeToggle = document.getElementById('slowModeToggle');
+const slowModeStatus = document.getElementById('slowModeStatus');
+
+// ★追加：デフォルト低速モードの切り替え
+slowModeToggle.addEventListener('click', () => {
+  defaultSlowMode = !defaultSlowMode;
+  slowModeStatus.textContent = defaultSlowMode ? 'ON' : 'OFF';
+  slowModeStatus.style.color = defaultSlowMode ? '#4dff4d' : '#ffffff';
+});
 
 // パスワード認証画面の制御
 const CORRECT_PASSWORD = 'touhoudaisuki'; // 合言葉
@@ -98,7 +110,7 @@ function checkPassword() {
   if (entered === CORRECT_PASSWORD) {
     passInput.blur();
     passError.classList.remove('visible');
-    
+
     passwordScreen.classList.add('hidden');
     titleScreen.classList.remove('hidden');
     gameState = 'TITLE';
@@ -127,15 +139,18 @@ document.querySelectorAll('.boss-select-btn').forEach(btn => {
   const selectBoss = (e) => {
     e.preventDefault();
     const type = btn.getAttribute('data-boss');
-    
+
     player.reset();
-    
+
     if (type === 'okuu') {
       boss.image = okuuImg;
       boss.reset('okuu');
     } else if (type === 'okuu2') {
       boss.image = okuuImg;
       boss.reset('okuu2');
+    } else if (type === 'okuu_final') {
+      boss.image = okuuImg;
+      boss.reset('okuu_final');
     } else if (type === 'kisume') {
       boss.image = kisumeImg;
       boss.reset('kisume');
@@ -143,7 +158,7 @@ document.querySelectorAll('.boss-select-btn').forEach(btn => {
       boss.image = kisumeImg;
       boss.reset('kisume2');
     }
-    
+
     bullets = [];
     enemyBullets = [];
     items = [];
@@ -152,21 +167,28 @@ document.querySelectorAll('.boss-select-btn').forEach(btn => {
     spellBonus = 10000000;
     cautionTimer = 150;
     lastTime = 0;
-    
+
     titleScreen.classList.add('hidden');
     gameState = 'PLAYING';
+    input.isSlowMode = defaultSlowMode; // ★追加：デフォルト低速設定を反映
   };
-  
+
   btn.addEventListener('click', selectBoss);
   btn.addEventListener('touchstart', selectBoss, { passive: false });
 });
 
 // オーバーレイ表示関数
-function showOverlay(title, subtitle, color) {
+function showOverlay(title, subtitle, color, isCapture = false) {
   resultTitle.textContent = title;
   resultTitle.style.color = color;
   resultSubtitle.textContent = subtitle;
   overlay.classList.remove('hidden');
+
+  if (isCapture) {
+    retryButton.classList.add('hidden'); // クリア時はリトライを隠す
+  } else {
+    retryButton.classList.remove('hidden'); // 敗北時はリトライを出す
+  }
 }
 
 function hideOverlay() {
@@ -184,14 +206,14 @@ function resetGame() {
   shakeTimer = 0;
   shakeIntensity = 0;
   lastTime = 0;
-  
+
   player.reset();
   boss.reset();
-  
+
   bullets = [];
   enemyBullets = [];
   items = [];
-  
+
   hideOverlay();
 }
 
@@ -239,7 +261,7 @@ function gameLoop(timestamp) {
 
   // --- 1. 背景描画（ボスにより動的切り替え） ---
   let grad;
-  if (boss.bossType === 'okuu') {
+  if (boss.bossType.startsWith('okuu')) {
     grad = ctx.createRadialGradient(
       PLAY_WIDTH / 2, 120, 40,
       PLAY_WIDTH / 2, 150, 400
@@ -262,7 +284,7 @@ function gameLoop(timestamp) {
   ctx.rect(0, 0, PLAY_WIDTH, PLAY_HEIGHT);
   ctx.clip();
   const time = Date.now() * 0.0008;
-  ctx.strokeStyle = boss.bossType === 'okuu' ? 'rgba(255, 68, 0, 0.06)' : 'rgba(80, 220, 100, 0.06)';
+  ctx.strokeStyle = boss.bossType.startsWith('okuu') ? 'rgba(255, 68, 0, 0.06)' : 'rgba(80, 220, 100, 0.06)';
   ctx.lineWidth = 3;
   for (let i = 0; i < 3; i++) {
     const radius = ((time * 80 + i * 130) % 360);
@@ -277,14 +299,14 @@ function gameLoop(timestamp) {
     ctx.save();
     ctx.rect(0, 0, PLAY_WIDTH, PLAY_HEIGHT);
     ctx.clip();
-    
+
     player.draw(ctx, input);
-    
+
     ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
     ctx.lineWidth = 3;
     ctx.strokeRect(5, 5, PLAY_WIDTH - 10, PLAY_HEIGHT - 10);
     ctx.restore();
-    
+
     ctx.restore();
     requestAnimationFrame(gameLoop);
     return;
@@ -299,21 +321,34 @@ function gameLoop(timestamp) {
         player.bombTimer = 180;
         triggerShake(30, 8);
         enemyBullets = [];
-        
+
         if (boss.isAlive && boss.y >= boss.targetY) {
           const damaged = boss.takeDamage(15);
           if (damaged && !boss.isAlive) {
             gameState = 'CAPTURED';
             playerScore += Math.floor(spellBonus);
-            showOverlay('SPELL CARD CAPTURED', boss.spellName, '#ffdd44');
+            showOverlay('SPELL CARD CAPTURED', `SCORE: ${playerScore.toString().padStart(9, '0')}\n${boss.spellName}`, '#ffdd44', true);
           }
         }
       }
     }
 
     // 1. 自機の更新とショット
-    player.update(input, PLAY_WIDTH, PLAY_HEIGHT);
-    
+    let speedMultiplier = 1.0;
+    if (boss.bossType === 'kisume2' && (player.y + player.height > waterLevel)) {
+      speedMultiplier = 0.6; // 水中では移動速度 60% に低下
+    }
+    player.update(input, PLAY_WIDTH, PLAY_HEIGHT, speedMultiplier);
+
+    // ★追加：キスメ2枚目の水位変動ロジック
+    if (boss.bossType === 'kisume2') {
+      // 約10秒周期で水位が 640(底) <-> 500(上昇) の間を変動
+      const waterCycle = Math.sin(Date.now() * 0.0006);
+      waterLevel = 640 - (waterCycle + 1) * 70;
+    } else {
+      waterLevel = 640;
+    }
+
     // ★追加：お空2枚目（人工太陽）の引力（重力）処理
     if (boss.bossType === 'okuu2' && boss.isAlive && boss.y >= boss.targetY) {
       const px = player.x + player.width / 2;
@@ -324,13 +359,24 @@ function gameLoop(timestamp) {
       const dy = by - py;
       const dist = Math.hypot(dx, dy);
       if (dist > 5) {
-        // 通常時は引力 1.1、低速時は精密操作のために 0.45 に減衰
-        const pullStrength = input.isSlowMode ? 0.45 : 1.1;
-        player.x += (dx / dist) * pullStrength;
-        player.y += (dy / dist) * pullStrength;
+        // ★重力の脈動を実装: 2秒周期で強弱を繰り返す (Math.sin)
+        const pulse = Math.sin(Date.now() * 0.003);
+        // 強さを 0.5 ～ 1.5 倍の範囲で変動させる
+        const gravityMultiplier = 1.0 + pulse * 0.5;
+
+        const basePullStrength = input.isSlowMode ? 0.45 : 1.1;
+        const currentPullStrength = basePullStrength * gravityMultiplier;
+
+        player.x += (dx / dist) * currentPullStrength;
+        player.y += (dy / dist) * currentPullStrength;
+
+        // 引力が最大に近い時に微弱なシェイクを発生させ、「引かれている感」を出す
+        if (pulse > 0.95) {
+          triggerShake(1, 0.5);
+        }
       }
     }
-    
+
     bullets.push(...player.fire(timestamp, input));
 
     const px = player.x + player.width / 2;
@@ -339,11 +385,11 @@ function gameLoop(timestamp) {
     // 2. ボスの更新と敵弾発射
     if (boss.isAlive) {
       boss.update();
-      
+
       const oldLen = enemyBullets.length;
       enemyBullets.push(...boss.fire(timestamp, px, py, spellTimer));
       const newLen = enemyBullets.length;
-      
+
       let hasSolarShot = false;
       for (let idx = oldLen; idx < newLen; idx++) {
         if (enemyBullets[idx] && enemyBullets[idx].isSolar) {
@@ -365,7 +411,7 @@ function gameLoop(timestamp) {
 
     if (boss.y >= boss.targetY && boss.isAlive) {
       spellTimer -= dt;
-      
+
       const decay = (9000000 / boss.timeLimit) * dt;
       spellBonus -= decay;
       if (spellBonus < 1000000) spellBonus = 1000000;
@@ -390,11 +436,11 @@ function gameLoop(timestamp) {
           playerScore += 100;
         }
         hit = true;
-        
+
         if (!boss.isAlive) {
           gameState = 'CAPTURED';
           playerScore += Math.floor(spellBonus);
-          showOverlay('SPELL CARD CAPTURED', boss.spellName, '#ffdd44');
+          showOverlay('SPELL CARD CAPTURED', `SCORE: ${playerScore.toString().padStart(9, '0')}\n${boss.spellName}`, '#ffdd44', true);
         }
       }
 
@@ -433,7 +479,7 @@ function gameLoop(timestamp) {
 
       const bx = eb.x + eb.width / 2;
       const by = eb.y + eb.height / 2;
-      
+
       let bulletRadius = eb.width / 2;
       let grazeRadiusLimit = player.grazeRadius + bulletRadius;
 
@@ -484,7 +530,7 @@ function gameLoop(timestamp) {
     }
 
     // お空戦のアラーム振動演出
-    if (boss.bossType === 'okuu') {
+    if (boss.bossType.startsWith('okuu')) {
       if (cautionTimer === 135) triggerShake(15, 6.0);
       if (cautionTimer === 85) triggerShake(15, 6.0);
       if (cautionTimer === 35) triggerShake(25, 9.0);
@@ -497,7 +543,7 @@ function gameLoop(timestamp) {
   ctx.save();
   ctx.rect(0, 0, PLAY_WIDTH, PLAY_HEIGHT);
   ctx.clip();
-  
+
   for (let b of bullets) b.draw(ctx);
   for (let eb of enemyBullets) eb.draw(ctx);
   if (boss.isAlive || gameState === 'CAPTURED') boss.draw(ctx);
@@ -507,13 +553,13 @@ function gameLoop(timestamp) {
     const radius = bombProgress * 600;
     const px = player.x + player.width / 2;
     const py = player.y + player.height / 2;
-    
+
     const grad = ctx.createRadialGradient(px, py, radius * 0.1, px, py, radius);
     grad.addColorStop(0, 'rgba(0, 255, 100, 0)');
     grad.addColorStop(0.8, 'rgba(0, 255, 100, 0.45)');
     grad.addColorStop(0.95, 'rgba(255, 255, 255, 0.8)');
     grad.addColorStop(1, 'rgba(0, 255, 100, 0)');
-    
+
     ctx.beginPath();
     ctx.arc(px, py, radius, 0, Math.PI * 2);
     ctx.fillStyle = grad;
@@ -523,7 +569,7 @@ function gameLoop(timestamp) {
 
   player.draw(ctx, input);
   ctx.restore();
-  
+
   input.draw();
 
   // 被弾フラッシュ
@@ -536,16 +582,16 @@ function gameLoop(timestamp) {
   }
 
   // ☢ CAUTION ☢ 警告演出
-  if (boss.bossType === 'okuu' && cautionTimer > 0 && gameState === 'PLAYING') {
+  if (boss.bossType.startsWith('okuu') && cautionTimer > 0 && gameState === 'PLAYING') {
     ctx.save();
     ctx.rect(0, 0, PLAY_WIDTH, PLAY_HEIGHT);
     ctx.clip();
     const bandHeight = 75;
     const bandY = canvas.height * 0.42 - bandHeight / 2;
-    
+
     ctx.fillStyle = 'rgba(20, 0, 0, 0.72)';
     ctx.fillRect(0, bandY - 12, PLAY_WIDTH, bandHeight + 24);
-    
+
     ctx.strokeStyle = '#ff9900';
     ctx.lineWidth = 4;
     ctx.beginPath();
@@ -564,7 +610,7 @@ function gameLoop(timestamp) {
     ctx.moveTo(0, bandY + bandHeight + 12);
     ctx.lineTo(PLAY_WIDTH, bandY + bandHeight + 12);
     ctx.stroke();
-    
+
     const isBlink = Math.floor(Date.now() / 180) % 2 === 0;
     if (isBlink) {
       ctx.fillStyle = '#ff2222';
@@ -574,7 +620,7 @@ function gameLoop(timestamp) {
       ctx.textAlign = 'center';
       ctx.fillText('☢ CAUTION ☢', PLAY_WIDTH / 2, canvas.height * 0.42 + 8);
     }
-    
+
     ctx.restore();
     cautionTimer--;
   }
@@ -596,107 +642,105 @@ function gameLoop(timestamp) {
   ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
   ctx.lineWidth = 3;
   ctx.strokeRect(5, 5, PLAY_WIDTH - 10, PLAY_HEIGHT - 10);
-  
+
   ctx.strokeStyle = 'rgba(139, 0, 0, 0.55)';
   ctx.lineWidth = 1.5;
   ctx.strokeRect(9, 9, PLAY_WIDTH - 18, PLAY_HEIGHT - 18);
   ctx.restore();
 
+  // ★追加：キスメ2枚目の水面描画
+  if (boss.bossType === 'kisume2' && waterLevel < 640) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 100, 255, 0.3)';
+    ctx.fillRect(0, waterLevel, PLAY_WIDTH, 640 - waterLevel);
+    // 水面の境界線
+    ctx.strokeStyle = 'rgba(150, 200, 255, 0.6)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, waterLevel);
+    ctx.lineTo(PLAY_WIDTH, waterLevel);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // サイドバーHUD描画
   ctx.save();
-  ctx.fillStyle = '#121214';
+  // 背景：深い紺色から黒へのグラデーション
+  const sideGrad = ctx.createLinearGradient(SIDEBAR_X, 0, SIDEBAR_X + SIDEBAR_WIDTH, 0);
+  sideGrad.addColorStop(0, '#0a0a0c');
+  sideGrad.addColorStop(1, '#1a1a1e');
+  ctx.fillStyle = sideGrad;
   ctx.fillRect(SIDEBAR_X, 0, SIDEBAR_WIDTH, GAME_HEIGHT);
 
+  // メイン境界線（金色の二重線風）
   ctx.strokeStyle = '#d4af37';
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(SIDEBAR_X, 0);
   ctx.lineTo(SIDEBAR_X, GAME_HEIGHT);
   ctx.stroke();
-
-  ctx.strokeStyle = '#220000';
+  ctx.strokeStyle = '#8a6d1d';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(SIDEBAR_X - 3, 0);
-  ctx.lineTo(SIDEBAR_X - 3, GAME_HEIGHT);
+  ctx.moveTo(SIDEBAR_X + 2, 0);
+  ctx.lineTo(SIDEBAR_X + 2, GAME_HEIGHT);
   ctx.stroke();
 
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-  ctx.shadowBlur = 3;
-  ctx.shadowOffsetX = 1.2;
-  ctx.shadowOffsetY = 1.2;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
 
-  const hx = SIDEBAR_X + 15;
+  const hx = SIDEBAR_X + 12;
+  const labelColor = '#ccaa66';
+  const valueColor = '#ffffff';
+  const accentColor = '#ff4d4d';
+
+  // 共通の項目描画関数
+  const drawStat = (label, value, y, vColor = valueColor, isStar = false) => {
+    // ラベル描画
+    ctx.font = 'italic 700 10px "Cormorant Garamond", serif';
+    ctx.fillStyle = labelColor;
+    ctx.textAlign = 'left';
+    ctx.fillText(label, hx, y);
+
+    // 値描画
+    ctx.font = isStar ? '700 13px "Cinzel", sans-serif' : '700 14px "Cinzel", monospace';
+    ctx.fillStyle = vColor;
+    ctx.textAlign = 'left';
+    const displayValue = isStar ? '★ '.repeat(value).trim() || 'None' : value;
+    ctx.fillText(displayValue, hx, y + 18);
+
+    // 区切り線
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(hx, y + 25);
+    ctx.lineTo(SIDEBAR_X + SIDEBAR_WIDTH - 12, y + 25);
+    ctx.stroke();
+  };
 
   // A. モードタイトル
   ctx.font = '700 9px "Cinzel", serif';
-  ctx.fillStyle = '#888888';
-  ctx.textAlign = 'left';
-  ctx.fillText('SPELL PRACTICE', hx, 30);
+  ctx.fillStyle = '#666666';
+  ctx.textAlign = 'center';
+  ctx.fillText('SPELL PRACTICE', SIDEBAR_X + SIDEBAR_WIDTH / 2, 25);
 
-  // B. Hi-Score
-  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
-  ctx.fillStyle = '#ff4d4d';
-  ctx.fillText('Hi-Score', hx, 65);
+  // B. Score / Hi-Score (原作の並び順)
+  drawStat('Score', playerScore.toString().padStart(9, '0'), 55);
+  drawStat('Hi-Score', '999999990', 95);
 
-  ctx.font = '700 13px "Cinzel", monospace';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText('999999990', hx, 82);
+  // C. Player / Spell
+  drawStat('Player', player.lives, 135, accentColor, true);
+  drawStat('Spell', player.bombs, 175, '#4dff4d', true);
 
-  // C. Score
-  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
-  ctx.fillStyle = '#ff4d4d';
-  ctx.fillText('Score', hx, 115);
+  // D. Power / Graze
+  drawStat('Power', player.power.toFixed(2) + ' / 4.00', 215);
+  drawStat('Graze', player.graze.toString().padStart(5, '0'), 255, '#4dff4d');
 
-  ctx.font = '700 13px "Cinzel", monospace';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(playerScore.toString().padStart(9, '0'), hx, 132);
-
-  // D. Player
-  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
-  ctx.fillStyle = '#ff4d4d';
-  ctx.fillText('Player', hx, 175);
-
-  ctx.font = '700 13px "Cinzel", sans-serif';
-  ctx.fillStyle = '#ff4d4d';
-  ctx.fillText('★ '.repeat(player.lives).trim() || 'None', hx, 192);
-
-  // E. Spell
-  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
-  ctx.fillStyle = '#ff4d4d';
-  ctx.fillText('Spell', hx, 225);
-
-  ctx.font = '700 13px "Cinzel", sans-serif';
-  ctx.fillStyle = '#4dff4d';
-  ctx.fillText('★ '.repeat(player.bombs).trim() || 'None', hx, 242);
-
-  // F. Power
-  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
-  ctx.fillStyle = '#ff4d4d';
-  ctx.fillText('Power', hx, 285);
-
-  ctx.font = '700 12px "Cinzel", monospace';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(player.power.toFixed(2) + ' / 4.00', hx, 302);
-
-  // G. Graze
-  ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
-  ctx.fillStyle = '#4dff4d'; 
-  ctx.fillText('Graze', hx, 345);
-
-  ctx.font = '700 13px "Cinzel", monospace';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(player.graze.toString().padStart(5, '0'), hx, 362);
-
-  // H. Spell Bonus
+  // E. Spell Bonus (ボス生存中のみ)
   if (boss.isAlive && gameState === 'PLAYING') {
-    ctx.font = 'italic 700 11px "Cormorant Garamond", serif';
-    ctx.fillStyle = '#ffaa00'; 
-    ctx.fillText('Spell Bonus', hx, 415);
-    
-    ctx.font = '700 12px "Cinzel", monospace';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(Math.floor(spellBonus).toString().padStart(8, '0'), hx, 432);
+    drawStat('Spell Bonus', Math.floor(spellBonus).toString().padStart(8, '0'), 295, '#ffaa00');
   }
   ctx.restore();
 
@@ -706,47 +750,47 @@ function gameLoop(timestamp) {
   ctx.shadowOffsetX = 1.5;
   ctx.shadowOffsetY = 1.5;
 
-  // I. 残り時間タイマー (秒 + ミリ秒の分割高速表示)
+  // I. 残り時間タイマー (配置を微調整)
   const sec = Math.floor(spellTimer).toString().padStart(2, '0');
   const ms = Math.floor((spellTimer % 1) * 100).toString().padStart(2, '0');
   const timerColor = spellTimer <= 10 ? '#ff3b3b' : '#ffffff';
 
   ctx.textAlign = 'right';
-  // 小数部（ミリ秒）
-  ctx.font = '700 18px "Cinzel", serif';
+  // ミリ秒
+  ctx.font = '700 20px "Cinzel", serif';
   ctx.fillStyle = timerColor;
-  ctx.fillText(ms, 352, 42);
+  ctx.fillText(ms, 352, 50);
 
-  // 整数部（秒）
-  ctx.font = '900 32px "Cinzel", serif';
-  ctx.fillText(sec + '.', 326, 42);
+  // 秒
+  ctx.font = '900 36px "Cinzel", serif';
+  ctx.fillText(sec + '.', 324, 50);
 
-  // J. スペルカード名（金色グラデーション ＋ 黒い袋文字縁取り）
+  // J. スペルカード名 (より重厚な袋文字)
   if (boss.isAlive) {
     const spellX = 350;
     const spellY = 618;
-    
-    ctx.font = '800 13px "Shippori Mincho", serif';
+
+    ctx.font = '800 14px "Shippori Mincho", serif';
     ctx.textAlign = 'right';
 
-    // 視認性を確保する黒フチ
-    ctx.lineJoin = 'miter';
-    ctx.miterLimit = 2;
+    // 黒フチ（より太く、はっきりと）
+    ctx.lineJoin = 'round';
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 4.5;
     ctx.strokeText(boss.spellName, spellX, spellY);
 
-    // 金色グラデーション
+    // 金色グラデーション (コントラストを強化)
     const textGrad = ctx.createLinearGradient(spellX - 160, spellY - 12, spellX, spellY);
-    textGrad.addColorStop(0, '#fff2a8');
-    textGrad.addColorStop(1, '#e5b22d');
+    textGrad.addColorStop(0, '#fff9cc');
+    textGrad.addColorStop(0.5, '#e5b22d');
+    textGrad.addColorStop(1, '#b8860b');
     ctx.fillStyle = textGrad;
     ctx.fillText(boss.spellName, spellX, spellY);
 
-    // 右上の履歴表示 (HISTORY)
+    // 右上の履歴表示
     ctx.font = '700 9px "Cinzel", serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-    ctx.fillText('HISTORY  01/05', spellX, spellY - 16);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fillText('HISTORY  01/05', spellX, spellY - 18);
   }
   ctx.restore();
   ctx.restore();

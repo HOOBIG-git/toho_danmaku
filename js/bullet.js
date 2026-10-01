@@ -1,6 +1,6 @@
 // js/bullet.js (丸ごと上書き)
 export class Bullet {
-  constructor(x, y, vx, vy, width, height, image, isEnemy = false, isSolar = false, isBucket = false, colorType = 'blue', isBouncing = false, isBubble = false) {
+  constructor(x, y, vx, vy, width, height, image, isEnemy = false, isSolar = false, isBucket = false, colorType = 'blue', isBouncing = false, isBubble = false, extra = {}) {
     this.x = x;
     this.y = y;
     this.vx = vx;
@@ -11,17 +11,51 @@ export class Bullet {
     this.isAlive = true;
     
     this.isEnemy = isEnemy;
-    this.isSolar = isSolar;     // ★追加：爆符「ペタフレア」用太陽弾フラグ
-    this.isBucket = isBucket;   // ★追加：怪奇「釣瓶落としの怪」用バケツ弾フラグ
-    this.colorType = colorType; // ★追加：随伴小弾の色タイプ ('blue', 'green', 'red', etc.)
-    this.isGrazed = false;     // ★追加：この弾ですでにグレイズしたか
-    this.isBouncing = isBouncing; // ★追加：左右壁バウンドフラグ
-    this.isBubble = isBubble;     // ★追加：サイン波上昇フラグ
+    this.isSolar = isSolar;     
+    this.isBucket = isBucket;   
+    this.colorType = colorType; 
+    this.isGrazed = false;     
+    this.isBouncing = isBouncing; 
+    this.isBubble = isBubble;     
+
+    // ★追加：高度な弾道制御用プロパティ
+    this.waitTimer = extra.waitTimer || 0;
+    this.accel = extra.accel || 0;
+    this.maxSpeed = extra.maxSpeed || 20;
+    this.isWaitAndGo = extra.isWaitAndGo || false;
+    this.targetAngle = extra.targetAngle !== undefined ? extra.targetAngle : null;
+    this.timer = 0;
   }
 
   update() {
+    this.timer++;
+
+    // 停止・再始動ロジック
+    if (this.waitTimer > 0) {
+      this.waitTimer--;
+      return; // 待機中は動かない
+    }
+
+    // 初回始動時の方向セット
+    if (this.isWaitAndGo && this.targetAngle !== null) {
+      const speed = Math.hypot(this.vx, this.vy) || 0.1;
+      this.vx = Math.cos(this.targetAngle) * speed;
+      this.vy = Math.sin(this.targetAngle) * speed;
+      this.targetAngle = null; // 一度セットしたらクリア
+    }
+
+    // 加速処理
+    if (this.accel !== 0) {
+      const speed = Math.hypot(this.vx, this.vy);
+      if (speed < this.maxSpeed) {
+        const ratio = (speed + this.accel) / (speed || 0.001);
+        this.vx *= ratio;
+        this.vy *= ratio;
+      }
+    }
+
     if (this.isBubble) {
-      this.y += this.vy; // 負の値（上昇）
+      this.y += this.vy; 
       this.x += Math.sin(this.y * 0.05) * 0.8;
     } else {
       this.x += this.vx;

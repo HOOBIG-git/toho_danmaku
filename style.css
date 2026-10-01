@@ -176,72 +176,79 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, #250204 0%, #050001 100%);
+  background: radial-gradient(circle, #2b0000 0%, #050001 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 150; /* オーバーレイより手前に配置 */
+  z-index: 150;
   color: white;
-  font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
+  font-family: 'Shippori Mincho', serif;
 }
 
 #titleText {
-  font-family: 'Georgia', 'Hiragino Mincho ProN', 'MS Mincho', serif;
-  font-size: 26px;
-  font-weight: bold;
-  color: #e5b22d; 
-  text-shadow: 0 0 15px rgba(229, 178, 45, 0.5);
+  font-family: 'Shippori Mincho', serif;
+  font-size: 32px;
+  font-weight: 900;
+  color: #fdf2a8;
+  text-shadow:
+    0 0 4px #000,
+    0 0 12px rgba(229, 178, 45, 0.6),
+    0 0 20px rgba(229, 178, 45, 0.4);
   text-align: center;
-  line-height: 1.4;
-  margin-bottom: 5px;
-  letter-spacing: 2px;
+  line-height: 1.3;
+  margin-bottom: 10px;
+  letter-spacing: 3px;
+  filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.8));
 }
 
 #titleDesc {
-  font-size: 11px;
-  color: #aaa;
-  margin-bottom: 35px;
-  letter-spacing: 1px;
+  font-size: 13px;
+  color: #ddd;
+  margin-bottom: 40px;
+  letter-spacing: 2px;
   text-align: center;
-  font-family: 'Georgia', sans-serif;
+  font-family: 'Cinzel', serif;
+  text-shadow: 1px 1px 2px #000;
 }
 
 .boss-select-btn {
-  width: 260px;
-  padding: 14px 20px;
-  margin-bottom: 18px;
-  border: 1.5px solid rgba(255, 255, 255, 0.35);
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.05);
+  width: 280px;
+  padding: 12px 20px;
+  margin-bottom: 15px;
+  border: 2px solid #d4af37;
+  border-radius: 0; /* 角をなくしてシャープに */
+  background: linear-gradient(to right, rgba(0,0,0,0.8), rgba(40,0,0,0.8), rgba(0,0,0,0.8));
   cursor: pointer;
   user-select: none;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  box-shadow: 0 0 0 1px #000;
 }
 
 .boss-select-btn:active {
-  background-color: rgba(139, 0, 0, 0.65); /* 深紅 */
-  border-color: #e5b22d; /* ゴールド */
-  transform: scale(0.97);
-  box-shadow: 0 0 12px rgba(229, 178, 45, 0.45);
+  background: linear-gradient(to right, #600, #a00, #600);
+  border-color: #fff;
+  transform: scale(0.98);
+  box-shadow: 0 0 15px rgba(229, 178, 45, 0.6);
 }
 
 .spell-prefix {
-  font-size: 11px;
+  font-size: 12px;
   font-style: italic;
-  color: #e5b22d; /* ゴールド */
+  color: #fdf2a8;
   margin-bottom: 4px;
-  font-family: 'Georgia', serif;
+  font-family: 'Cormorant Garamond', serif;
+  text-shadow: 1px 1px 2px #000;
 }
 
 .boss-name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
-  color: #ffffff;
-  font-family: 'Hiragino Kaku Gothic Pro', sans-serif;
+  color: #fff;
+  font-family: 'Shippori Mincho', serif;
   letter-spacing: 1px;
+  text-shadow: 1px 1px 3px #000;
 }
 
 /* --- パスワード認証画面 --- */
@@ -251,102 +258,117 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, #1f0103 0%, #050001 100%);
+  background: radial-gradient(circle, #2b0000 0%, #050001 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 200; /* 全オーバーレイの最前面 */
+  z-index: 200;
   color: white;
   text-align: center;
-  font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
+  font-family: 'Shippori Mincho', serif;
   transition: opacity 0.3s ease;
 }
 
+.slow-mode-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 12px;
+  border: 1px solid #d4af37;
+  border-radius: 4px;
+  color: #fff;
+  font-family: "Cinzel", serif;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  z-index: 10;
+  transition: background 0.2s;
+}
+
+.slow-mode-toggle:active {
+  background: rgba(212, 175, 55, 0.3);
+}
+
+.toggle-label {
+  color: #ccaa66;
+  margin-right: 5px;
+}
+
+.toggle-status {
+  font-weight: bold;
+}
+
 .gate-title {
-  font-family: 'Georgia', 'Hiragino Mincho ProN', serif;
-  font-size: 22px;
-  color: #e5b22d;
-  text-shadow: 0 0 12px rgba(229, 178, 45, 0.4);
+  font-family: 'Shippori Mincho', serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #fdf2a8;
+  text-shadow: 0 0 15px rgba(229, 178, 45, 0.5), 2px 2px 2px #000;
   line-height: 1.4;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .gate-sub {
-  font-size: 12px;
-  letter-spacing: 2px;
+  font-size: 14px;
+  letter-spacing: 3px;
   font-weight: normal;
   color: #bbb;
+  font-family: 'Cinzel', serif;
 }
 
 .gate-desc {
-  font-size: 12px;
-  color: #888;
-  margin-bottom: 24px;
+  font-size: 13px;
+  color: #aaa;
+  margin-bottom: 30px;
 }
 
 .input-box {
   position: relative;
-  width: 220px;
-  margin-bottom: 20px;
+  width: 240px;
+  margin-bottom: 25px;
 }
 
-/* スマホSafariでの自動ズーム防止のため font-size: 16px 以上必須 */
 #passInput {
   width: 100%;
-  padding: 10px 14px;
+  padding: 12px 14px;
   font-size: 16px;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
   text-align: center;
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid rgba(212, 175, 55, 0.4);
-  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #d4af37;
+  border-radius: 0;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 0 5px rgba(0,0,0,1);
 }
 
 #passInput:focus {
-  border-color: #e5b22d;
-  box-shadow: 0 0 10px rgba(229, 178, 45, 0.4);
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.pass-error {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  margin-top: 6px;
-  font-size: 11px;
-  color: #ff4d4d;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition: all 0.2s ease;
-  pointer-events: none;
-}
-
-.pass-error.visible {
-  opacity: 1;
-  transform: translateY(0);
+  border-color: #fff;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+  background: rgba(0, 0, 0, 0.8);
 }
 
 .pass-btn {
-  width: 140px;
-  padding: 9px 0;
-  font-size: 14px;
+  width: 160px;
+  padding: 10px 0;
+  font-size: 15px;
   font-weight: bold;
   letter-spacing: 2px;
   color: #fff;
-  background: linear-gradient(135deg, #8b0000, #4a0000);
-  border: 1px solid #d4af37;
-  border-radius: 20px;
+  background: linear-gradient(to bottom, #8b0000, #4a0000);
+  border: 2px solid #d4af37;
+  border-radius: 0;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-  transition: transform 0.1s, background 0.2s;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+  transition: all 0.1s ease;
+  font-family: 'Shippori Mincho', serif;
 }
 
 .pass-btn:active {
   transform: scale(0.95);
-  background: linear-gradient(135deg, #4a0000, #8b0000);
+  background: linear-gradient(to bottom, #4a0000, #8b0000);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
 }
