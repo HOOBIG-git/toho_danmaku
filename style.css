@@ -40,8 +40,8 @@ body {
   left: 10px;        /* 左端から少し離す */
   top: 50%;
   transform: translateY(-50%); /* 縦方向の中央に配置 */
-  width: 70px;
-  height: 70px;
+  width: 90px;
+  height: 90px;
   background-color: rgba(255, 0, 0, 0.6); /* 半透明の赤色 */
   color: white;
   border-radius: 50%; /* 丸いボタンにする */
@@ -65,8 +65,8 @@ body {
   right: 10px;        /* 右端から少し離す */
   top: 50%;
   transform: translateY(-50%); /* 縦方向の中央に配置 */
-  width: 70px;
-  height: 70px;
+  width: 90px;
+  height: 90px;
   background-color: rgba(0, 180, 0, 0.6); /* 半透明の緑色 */
   color: white;
   border-radius: 50%; /* 丸いボタンにする */

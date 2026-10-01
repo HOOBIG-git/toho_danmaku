@@ -90,9 +90,10 @@ export class Player {
       const bSpd = 15;
 
       if (input.isSlowMode) {
-        // 標準低速：2-way直線ショット
-        newBullets.push(new Bullet(bX - 8, bY, 0, -bSpd, 16, 32, this.bulletImage));
-        newBullets.push(new Bullet(bX + 8, bY, 0, -bSpd, 16, 32, this.bulletImage));
+        // 低速：集中3-wayショット（火力を維持しつつ射線を凝縮）
+        newBullets.push(new Bullet(bX, bY, 0, -bSpd, 16, 32, this.bulletImage));
+        newBullets.push(new Bullet(bX - 6, bY + 2, -1, -bSpd * 0.98, 16, 32, this.bulletImage));
+        newBullets.push(new Bullet(bX + 6, bY + 2, 1, -bSpd * 0.98, 16, 32, this.bulletImage));
       } else {
         // 標準高速：3-way拡散ショット
         newBullets.push(new Bullet(bX, bY, 0, -bSpd, 16, 32, this.bulletImage));
