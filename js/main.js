@@ -370,7 +370,7 @@ function gameLoop(timestamp) {
         player.x += (dx / dist) * currentPullStrength;
         player.y += (dy / dist) * currentPullStrength;
 
-        // 引力が最大に近い時に微弱なシェイクを発生させ、「引かれている感」を出す
+        // 引力が最大に近い時に微弱なシェイクを発生
         if (pulse > 0.95) {
           triggerShake(1, 0.5);
         }

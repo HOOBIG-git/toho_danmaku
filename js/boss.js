@@ -22,27 +22,27 @@ export class Boss {
     
     // 体力を数倍に設定
     if (this.bossType === 'okuu') {
-      this.spellName = '核熱符「ソーラー・フレア・ダンス」';
+      this.spellName = '核符「ダンシングフレア」';
       this.maxHp = 400;
       this.hp = 400;
       this.timeLimit = 60;
     } else if (this.bossType === 'okuu2') {
-      this.spellName = '重力符「シンギュラリティ・サン」';
+      this.spellName = '核符「Gフィールドアノマリー」';
       this.maxHp = 450;
       this.hp = 450;
       this.timeLimit = 60;
     } else if (this.bossType === 'okuu_final') {
-      this.spellName = '終焉符「超新星爆発の残滓」';
+      this.spellName = '「超新星爆発の残滓」';
       this.maxHp = 600;
       this.hp = 600;
       this.timeLimit = 80;
     } else if (this.bossType === 'kisume2') {
-      this.spellName = '井戸符「底なしの水泡迷宮」';
+      this.spellName = '釣瓶「仄暗い井戸の底から」';
       this.maxHp = 350;
       this.hp = 350;
       this.timeLimit = 60;
     } else {
-      this.spellName = '怪奇「水底より出でる釣瓶」';
+      this.spellName = '怪奇「水底より出でるは釣瓶」';
       this.maxHp = 300;
       this.hp = 300;
       this.timeLimit = 60;
@@ -74,24 +74,24 @@ export class Boss {
     this.invincibleTimer = 120; // 無敵時間リセット
     
     if (this.bossType === 'okuu') {
-      this.spellName = '核熱符「ソーラー・フレア・ダンス」';
-      this.maxHp = 400; // 体力を数倍に
+      this.spellName = '核符「ダンシングフレア」';
+      this.maxHp = 400; 
       this.hp = 400;
     } else if (this.bossType === 'okuu2') {
-      this.spellName = '重力符「シンギュラリティ・サン」';
+      this.spellName = '核符「Gフィールドアノマリー」';
       this.maxHp = 450;
       this.hp = 450;
     } else if (this.bossType === 'okuu_final') {
-      this.spellName = '終焉符「超新星爆発の残滓」';
+      this.spellName = '「超新星爆発の残滓」';
       this.maxHp = 600;
       this.hp = 600;
     } else if (this.bossType === 'kisume2') {
-      this.spellName = '井戸符「底なしの水泡迷宮」';
+      this.spellName = '釣瓶「仄暗い井戸の底から」';
       this.maxHp = 350;
       this.hp = 350;
     } else {
-      this.spellName = '怪奇「水底より出でる釣瓶」';
-      this.maxHp = 300; // 体力を数倍に
+      this.spellName = '怪奇「水底より出でるは釣瓶」';
+      this.maxHp = 300; 
       this.hp = 300;
     }
     
@@ -243,7 +243,6 @@ export class Boss {
       const by = this.y + this.height / 2;
 
       if (this.bossType === 'okuu') {
-        // 爆符「ペタフレア」の核熱弾予兆
         const solarInterval = this.bossType === 'okuu' ? 1400 : 1000; // 簡易的な判定
         if (now - this.lastSolarFired > solarInterval - 200) {
           ctx.save();
@@ -258,7 +257,6 @@ export class Boss {
           ctx.restore();
         }
       } else if (this.bossType === 'kisume') {
-        // 怪奇「釣瓶落としの怪」のバケツ弾予兆
         if (now - this.lastSolarFired > 1600 - 300) {
           ctx.save();
           ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
@@ -341,7 +339,7 @@ export class Boss {
 
     if (this.bossType === 'okuu') {
       // ==========================================
-      // 【霊烏路空】 爆符「ペタフレア」（時間激化）
+      // 【霊烏路空】 （時間激化）
       // ==========================================
       // パラメータの設定
       let solarFireInterval = 1400; // イージー
@@ -403,7 +401,7 @@ export class Boss {
       }
     } else if (this.bossType === 'okuu2') {
       // ==========================================
-      // 【霊烏路空】 「地獄 of 極熱人工太陽」（ダイナミック引力＋同心円フレア）
+      // 【霊烏路空】
       // ==========================================
       let ringInterval = 1200;
       let ringCount = 18;
@@ -450,7 +448,7 @@ export class Boss {
       }
     } else if (this.bossType === 'kisume2') {
       // ==========================================
-      // 【キスメ】 井戸符「仄暗い井戸の底から」（壁バウンド＋水泡せり上がり）
+      // 【キスメ】 井戸符「仄暗い井戸の底から」
       // ==========================================
       let bounceInterval = 600;
       let numBounce = 1;
@@ -503,7 +501,7 @@ export class Boss {
       }
     } else if (this.bossType === 'okuu_final') {
       // ==========================================
-      // 【霊烏路空】 「サブタレイニアン・サン」（究極の核熱）
+      // 【霊烏路空】（究極の核熱）
       // ==========================================
       const hpRatio = this.hp / this.maxHp;
 
@@ -577,7 +575,7 @@ export class Boss {
       }
     } else {
       // ==========================================
-      // 【キスメ】 怪奇「釣瓶落としの怪」（時間激化）
+      // 【キスメ】 （時間激化）
       // ==========================================
       // パラメータの設定
       let blueFireInterval = 380; // イージー
