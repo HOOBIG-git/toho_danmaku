@@ -254,15 +254,15 @@ export class Boss {
     const by = this.y + this.height / 2;
 
     let attackPhase = 1;
-    if (this.bossType === 'okuu2') {
-        const hpRatio = this.hp / this.maxHp;
-        if (hpRatio > 0.66) attackPhase = 1;
-        else if (hpRatio > 0.33) attackPhase = 2;
-        else attackPhase = 3;
+    const hpRatio = this.hp / this.maxHp;
+
+    // 時間経過 または HP減少 のどちらか早い方でフェーズ移行
+    if (spellTimer <= 20 || hpRatio <= 0.33) {
+      attackPhase = 3;
+    } else if (spellTimer <= 40 || hpRatio <= 0.66) {
+      attackPhase = 2;
     } else {
-        if (spellTimer > 40) attackPhase = 1;
-        else if (spellTimer > 20) attackPhase = 2;
-        else attackPhase = 3;
+      attackPhase = 1;
     }
 
     if (this.bossType === 'okuu_final') {
