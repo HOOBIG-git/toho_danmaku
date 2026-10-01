@@ -41,8 +41,8 @@ export class Boss {
   setBossStats() {
     if (this.bossType === 'okuu') {
       this.spellName = '核符「ダンシングフレア」';
-      this.maxHp = 400;
-      this.hp = 400;
+      this.maxHp = 300;
+      this.hp = 300;
       this.timeLimit = 60;
     } else if (this.bossType === 'okuu2') {
       this.spellName = '核符「Gフィールドアノマリー」';
@@ -56,13 +56,13 @@ export class Boss {
       this.timeLimit = 80;
     } else if (this.bossType === 'kisume2') {
       this.spellName = '釣瓶「仄暗い井戸の底から」';
-      this.maxHp = 350;
-      this.hp = 350;
+      this.maxHp = 200;
+      this.hp = 200;
       this.timeLimit = 60;
     } else {
       this.spellName = '怪奇「水底より出でるは釣瓶」';
-      this.maxHp = 300;
-      this.hp = 300;
+      this.maxHp = 200;
+      this.hp = 200;
       this.timeLimit = 60;
     }
   }
