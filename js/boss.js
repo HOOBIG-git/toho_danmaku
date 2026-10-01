@@ -270,7 +270,7 @@ export class Boss {
       if (hpRatio > 0.66) {
         if (timestamp - this.lastSolarFired > 1200) {
           const angle = Math.atan2(playerY - by, playerX - bx);
-          bullets.push(new Bullet(bx - 15, by - 15, Math.cos(angle) * 2, Math.sin(angle) * 2, 30, 30, null, true, false, false, 'red', false, false, { splitTimer: 60, colorType: 'red' }));
+          bullets.push(new Bullet(bx - 30, by - 30, Math.cos(angle) * 2, Math.sin(angle) * 2, 60, 60, null, true, false, false, 'red', false, false, { splitTimer: 60, colorType: 'red' }));
           this.lastSolarFired = timestamp;
         }
         if (timestamp - this.lastBlueFired > 800) {
@@ -283,9 +283,9 @@ export class Boss {
           this.lastBlueFired = timestamp;
         }
       } else if (hpRatio > 0.33) {
-        if (timestamp - this.lastBlueFired > 250) { // 150 -> 250ms に延長
-          const ringCount = 1; // 2 -> 1層に削減
-          const bulletsPerRing = 8; // 12 -> 8発に削減
+        if (timestamp - this.lastBlueFired > 250) {
+          const ringCount = 1;
+          const bulletsPerRing = 8;
           const time = timestamp * 0.001;
           for (let r = 0; r < ringCount; r++) {
             const radius = 60 + r * 40;
@@ -303,25 +303,52 @@ export class Boss {
           this.lastSolarFired = timestamp;
         }
       } else {
-        const cycleTime = timestamp % 6000;
-        if (cycleTime < 4000) {
-          if (timestamp - this.lastBlueFired > 100) {
-            for (let i = 0; i < 4; i++) {
+        // Phase 3: 特異点層「シンギュラリティ・レイヤー」
+        const cycleTime = timestamp % 5000;
+
+        if (timestamp - this.lastBlueFired > 300) {
+          const time = timestamp * 0.001;
+          const ringConfigs = [
+            { count: 12, speed: 3.5, offset: 0 },    // 高速層
+            { count: 12, speed: 2.2, offset: Math.PI / 12 }, // 中速層
+            { count: 12, speed: 1.2, offset: Math.PI / 6 }   // 低速層
+          ];
+          ringConfigs.forEach(config => {
+            for (let i = 0; i < config.count; i++) {
+              const a = (i * Math.PI * 2) / config.count + time + config.offset;
+              bullets.push(new Bullet(bx - 7, by - 7, Math.cos(a) * config.speed, Math.sin(a) * config.speed, 14, 14, null, true, false, false, 'red'));
+            }
+          });
+          this.lastBlueFired = timestamp;
+        }
+
+        if (cycleTime > 1000 && cycleTime < 3000) {
+          if (timestamp - this.lastSolarFired > 600) {
+            const numFlares = 4;
+            for (let i = 0; i < numFlares; i++) {
+              const a = (i * Math.PI / 2) + (timestamp * 0.001);
+              bullets.push(new Bullet(bx - 7, by - 7, Math.cos(a) * 6, Math.sin(a) * 6, 14, 14, null, true, false, false, 'orange'));
+            }
+            this.lastSolarFired = timestamp;
+          }
+        }
+
+        if (cycleTime > 3000) {
+          if (timestamp - this.lastBlueFired > 150) {
+            const num = 8;
+            for (let i = 0; i < num; i++) {
               const a = Math.random() * Math.PI * 2;
               const sx = bx + Math.cos(a) * 600;
               const sy = by + Math.sin(a) * 600;
-              bullets.push(new Bullet(sx - 7, sy - 7, 0, 0, 14, 14, null, true, false, false, 'red', false, false, { behavior: 'converge', targetX: bx, targetY: by, accel: 0.15, maxSpeed: 8 }));
+              bullets.push(new Bullet(sx - 7, sy - 7, 0, 0, 14, 14, null, true, false, false, 'red', false, false, {
+                behavior: 'converge',
+                targetX: bx,
+                targetY: by,
+                accel: 0.05,
+                maxSpeed: 1.5
+              }));
             }
             this.lastBlueFired = timestamp;
-          }
-        } else if (cycleTime >= 4500) {
-          if (timestamp - this.lastSolarFired > 500) {
-            const num = 24; // 36 -> 24 に削減
-            for (let i = 0; i < num; i++) {
-              const a = (i * Math.PI * 2) / num;
-              bullets.push(new Bullet(bx - 7, by - 7, Math.cos(a) * 4, Math.sin(a) * 4, 14, 14, null, true, false, false, 'red', false, false, { behavior: 'expand', targetX: bx, targetY: by, accel: 0.1, maxSpeed: 12 }));
-            }
-            this.lastSolarFired = timestamp;
           }
         }
       }
