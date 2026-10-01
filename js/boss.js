@@ -355,35 +355,60 @@ export class Boss {
       return bullets;
 
     } else if (this.bossType === 'okuu') {
+      // ==========================================
+      // 【霊烏路空】 （時間激化）
+      // ==========================================
       let solarFireInterval = 1400, solarCount = 1, blueFireInterval = 320, numBlue = 4, rotationSpeed = 0.06;
+      let fissionInterval = 2000, numFission = 2;
+
       if (attackPhase === 2) {
         solarFireInterval = 1050; solarCount = 2; blueFireInterval = 220; numBlue = 6; rotationSpeed = 0.08;
+        fissionInterval = 1500; numFission = 3;
       } else if (attackPhase === 3) {
         solarFireInterval = 780; solarCount = 3; blueFireInterval = 150; numBlue = 8; rotationSpeed = 0.11;
+        fissionInterval = 1000; numFission = 4;
       }
+
+      // 1. 超巨大太陽弾（核の脈動）
       if (timestamp - this.lastSolarFired > solarFireInterval) {
         const angle = Math.atan2(playerY - by, playerX - bx);
         const solarSpeed = 2.0;
         if (solarCount === 1) {
-          bullets.push(new Bullet(bx - 70, by - 70, Math.cos(angle) * solarSpeed, Math.sin(angle) * solarSpeed, 140, 140, null, true, true));
+          bullets.push(new Bullet(bx - 100, by - 100, Math.cos(angle) * solarSpeed, Math.sin(angle) * solarSpeed, 200, 200, null, true, true));
         } else if (solarCount === 2) {
           for (let i = -0.5; i <= 0.5; i += 1.0) {
             const a = angle + (i * 0.35);
-            bullets.push(new Bullet(bx - 70, by - 70, Math.cos(a) * solarSpeed, Math.sin(a) * solarSpeed, 140, 140, null, true, true));
+            bullets.push(new Bullet(bx - 100, by - 100, Math.cos(a) * solarSpeed, Math.sin(a) * solarSpeed, 200, 200, null, true, true));
           }
         } else {
           for (let i = -1; i <= 1; i++) {
             const a = angle + (i * 0.42);
-            bullets.push(new Bullet(bx - 70, by - 70, Math.cos(a) * solarSpeed, Math.sin(a) * solarSpeed, 140, 140, null, true, true));
+            bullets.push(new Bullet(bx - 100, by - 100, Math.cos(a) * solarSpeed, Math.sin(a) * solarSpeed, 200, 200, null, true, true));
           }
         }
         this.lastSolarFired = timestamp;
       }
+
+      // 2. 核分裂弾（Fission Bullet）
+      if (timestamp - (this.lastFissionFired || 0) > fissionInterval) {
+        for (let i = 0; i < numFission; i++) {
+          const a = (i * Math.PI * 2) / numFission + (timestamp * 0.001);
+          bullets.push(new Bullet(bx - 15, by - 15, Math.cos(a) * 2.5, Math.sin(a) * 2.5, 30, 30, null, true, false, false, 'red', false, false, {
+            splitTimer: 80,
+            colorType: 'red'
+          }));
+        }
+        this.lastFissionFired = timestamp;
+      }
+
+      // 3. 青い粒弾らせん
       if (timestamp - this.lastBlueFired > blueFireInterval) {
         const blueSpeed = 3.6;
         for (let i = 0; i < numBlue; i++) {
           const a = this.blueSpiralAngle + (i * Math.PI * 2) / numBlue;
-          bullets.push(new Bullet(bx - 7, by - 7, Math.cos(a) * blueSpeed, Math.sin(a) * blueSpeed, 14, 14, null, true, false, false, 'blue'));
+          const vx = Math.cos(a) * blueSpeed;
+          const vy = Math.sin(a) * blueSpeed;
+          bullets.push(new Bullet(bx - 7, by - 7, vx, vy, 14, 14, null, true, false, false, 'blue'));
         }
         this.blueSpiralAngle += rotationSpeed;
         this.lastBlueFired = timestamp;
@@ -421,7 +446,9 @@ export class Boss {
       if (timestamp - this.lastBlueFired > bounceInterval) {
         for (let i = 0; i < numBounce; i++) {
           const angle = Math.PI * 0.25 + (i * Math.PI * 0.5) / (numBounce - 1 || 1);
-          bullets.push(new Bullet(bx - 7, by - 7, Math.cos(angle) * bounceSpeed, Math.sin(angle) * bounceSpeed, 14, 14, null, true, false, false, 'blue', true, false));
+          const vx = Math.cos(angle) * bounceSpeed;
+          const vy = Math.sin(angle) * bounceSpeed;
+          bullets.push(new Bullet(bx - 7, by - 7, vx, vy, 14, 14, null, true, false, false, 'blue', true, false));
         }
         this.lastBlueFired = timestamp;
       }
@@ -441,7 +468,9 @@ export class Boss {
         const blueSpeed = 2.5;
         for (let i = 0; i < numBlue; i++) {
           const a = this.blueSpiralAngle + (i * Math.PI * 2) / numBlue;
-          bullets.push(new Bullet(bx - 7, by - 7, Math.cos(a) * blueSpeed, Math.sin(a) * blueSpeed, 14, 14, null, true, false, false, 'green'));
+          const vx = Math.cos(a) * blueSpeed;
+          const vy = Math.sin(a) * blueSpeed;
+          bullets.push(new Bullet(bx - 7, by - 7, vx, vy, 14, 14, null, true, false, false, 'green'));
         }
         this.blueSpiralAngle += rotationSpeed;
         this.lastBlueFired = timestamp;
