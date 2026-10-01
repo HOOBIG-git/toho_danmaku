@@ -314,7 +314,6 @@ export class Boss {
     const bx = this.x + this.width / 2;
     const by = this.y + this.height / 2;
 
-    // 残り時間による「激怒段階（Phase）」の分岐 (初期時間60秒想定)
     let attackPhase = 1; // 1: 易しい, 2: 中間, 3: 激化(狂暴化)
     
     // 【霊烏路空2】 のみHPベースでフェーズ管理
